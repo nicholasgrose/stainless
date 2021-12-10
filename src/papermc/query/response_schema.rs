@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 
 use serde::Deserialize;
 
@@ -52,4 +53,10 @@ pub struct Change {
 pub struct Download {
     pub name: String,
     pub sha256: String,
+}
+
+impl Display for Download {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{Name: {}, SHA256: {}}}", self.name, self.sha256)
+    }
 }

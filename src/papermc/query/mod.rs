@@ -5,7 +5,7 @@ use crate::papermc::{PaperMCClient, PaperMCProject};
 use crate::papermc::query::response_schema::{BuildResponse, Download, VersionResponse};
 
 mod url;
-mod response_schema;
+pub mod response_schema;
 
 pub async fn latest_papermc_client_for_project(project: PaperMCProject, client: &Client) -> Result<PaperMCClient, Error> {
     let latest_build = latest_project_build(&project, client).await?;
@@ -14,7 +14,7 @@ pub async fn latest_papermc_client_for_project(project: PaperMCProject, client: 
     Ok(PaperMCClient {
         project,
         build: latest_build,
-        download: application_download.name.clone(),
+        application_download,
     })
 }
 
