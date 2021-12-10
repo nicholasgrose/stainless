@@ -6,7 +6,8 @@ use reqwest::Client;
 use serde::Deserialize;
 use tokio;
 
-static PAPER_MC_URL_ROOT: &str = "https://papermc.io/api/v2";
+static PAPERMC_URL_ROOT: &str = "https://papermc.io/api/v2";
+static PAPERMC_DOWNLOAD_TYPE_NAME: &str = "application";
 
 struct PaperMCProject {
     name: String,
@@ -89,15 +90,18 @@ async fn latest_papermc_client_for_project(project: PaperMCProject, client: &Cli
     let build_response = call_papermc_project_version_api(&project, &client)
         .await?;
     let latest_build = build_response.builds[0];
-    let download_response = call_papermc_project_build_api(&project, &latest_build, &client)
+    let build_response = call_papermc_project_build_api(&project, &latest_build, &client)
         .await?;
-    let latest_download = latest_download_hash_from_response(download_response)?;
 
-    Ok(PaperMCClient {
-        project,
-        build: latest_build,
-        download: String::from(latest_download),
-    })
+    if let Some(application_download) = build_response.downloads.get(PAPERMC_DOWNLOAD_TYPE_NAME) {
+        Ok(PaperMCClient {
+            project,
+            build: latest_build,
+            download: String::from(&application_download.name),
+        })
+    } else {
+        Err(Error::msg("no available downloads provided for latest build of project"))
+    }
 }
 
 async fn call_papermc_project_version_api(project: &PaperMCProject, client: &Client) -> Result<ProjectVersionResponse, Error> {
@@ -112,7 +116,7 @@ async fn call_papermc_project_version_api(project: &PaperMCProject, client: &Cli
 }
 
 fn papermc_project_version_url(project: &PaperMCProject) -> String {
-    format!("{}/projects/{}/versions/{}", PAPER_MC_URL_ROOT, project.name, project.version)
+    format!("{}/projects/{}/versions/{}", PAPERMC_URL_ROOT, project.name, project.version)
 }
 
 async fn call_papermc_project_build_api(project: &PaperMCProject, build: &i32, client: &Client) -> Result<ProjectBuildResponse, Error> {
@@ -128,12 +132,4 @@ async fn call_papermc_project_build_api(project: &PaperMCProject, build: &i32, c
 
 fn papermc_project_build_download_url(project: &PaperMCProject, build: &i32) -> String {
     format!("{}/builds/{}", papermc_project_version_url(project), build)
-}
-
-fn latest_download_hash_from_response(build_response: ProjectBuildResponse) -> Result<String, Error> {
-    for (_, download) in build_response.downloads {
-        return Ok(download.sha256);
-    }
-
-    Err(Error::msg("no downloads were found in build response"))
 }
