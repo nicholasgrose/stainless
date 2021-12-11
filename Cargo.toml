@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.51"
+hex = "0.4.3"
 reqwest = { version = "0.11.7", features = ["json"] }
 serde = { version = "1.0.130", features = ["derive"] }
+sha2 = "0.10.0"
 tokio = { version = "1.14.0", features = ["full"] }
