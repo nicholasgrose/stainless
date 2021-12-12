@@ -11,7 +11,7 @@ async fn main() {
     let http_client = reqwest::Client::new();
 
     loop {
-        println!("Starting server initialization...");
+        println!("{} Starting server initialization...", emoji::symbols::alphanum::INFORMATION.glyph);
 
         let server_config = match load_server_configuration(&http_client).await {
             Ok(config) => config,
@@ -43,8 +43,24 @@ async fn main() {
 
 // TODO: Make this actually download and start a java server
 async fn start_server<'a>(server_config: &'a ServerConfig, http_client: &Client) -> Result<&'a PaperMCClient, Error> {
-    let current_client = match &server_config.latest_client {
+    let current_client = update_client(server_config, http_client).await;
+
+    match current_client {
+        Some(client) => {
+            println!("{} Using {}!", emoji::symbols::other_symbol::CHECK_MARK.glyph, client.application_download.name);
+            let result = client.start_server(&server_config)?;
+            println!("{} Server finished: ({})", emoji::symbols::alphanum::INFORMATION.glyph, result);
+            Ok(client)
+        }
+        None => Err(Error::msg("no valid server client could be acquired"))
+    }
+}
+
+async fn update_client<'a>(server_config: &'a ServerConfig, http_client: &Client) -> Option<&'a PaperMCClient> {
+    match &server_config.latest_client {
         Some(latest_client) => {
+            println!("{} Updating client to {}...", emoji::symbols::alphanum::INFORMATION.glyph, latest_client.application_download.name);
+
             match latest_client.download_client(&server_config.client_dir_path, http_client).await {
                 Ok(_) => Some(latest_client),
                 Err(e) => {
@@ -55,19 +71,10 @@ async fn start_server<'a>(server_config: &'a ServerConfig, http_client: &Client)
             }
         }
         None => {
-            println!("{} No new client could be found.", emoji::symbols::alphanum::INFORMATION.glyph);
+            println!("{} No new client to update to.", emoji::symbols::alphanum::INFORMATION.glyph);
             println!("{} Attempting to roll back to previous client.", emoji::symbols::alphanum::INFORMATION.glyph);
             Option::from(&server_config.previous_client)
         }
-    };
-
-    match current_client {
-        Some(client) => {
-            let result = client.start_server(&server_config)?;
-            println!("{} Server finished: ({})", emoji::symbols::alphanum::INFORMATION.glyph, result);
-            Ok(client)
-        }
-        None => Err(Error::msg("no valid server client could be acquired"))
     }
 }
 
@@ -81,7 +88,7 @@ pub struct ServerConfig {
 
 // TODO: Make this load from a config file
 async fn load_server_configuration(http_client: &Client) -> Result<ServerConfig, Error> {
-    println!("Loading server configuration...");
+    println!("{} Loading server configuration...", emoji::symbols::alphanum::INFORMATION.glyph);
     let project = PaperMCProject {
         name: String::from("paper"),
         version: String::from("1.18"),

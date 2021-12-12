@@ -35,6 +35,8 @@ impl Display for PaperMCClient {
 
 impl PaperMCClient {
     pub async fn download_client(&self, client_dir_path: &str, http_client: &Client) -> Result<(), Error> {
+        println!("{} Downloading {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
+
         let client_dir_path = Path::new(client_dir_path);
         let client_file_path = self.client_file_path(client_dir_path);
 
@@ -50,6 +52,8 @@ impl PaperMCClient {
     }
 
     pub fn delete_client(&self, client_dir_path: &str) -> Result<(), Error> {
+        println!("{} Removing {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
+
         let client_dir_path = Path::new(client_dir_path);
         remove_file(self.client_file_path(client_dir_path))?;
 
@@ -57,10 +61,13 @@ impl PaperMCClient {
     }
 
     pub fn start_server(&self, server_config: &ServerConfig) -> Result<ExitStatus, Error> {
+        println!("{} Starting {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
+
         let client_dir_path = Path::new(&server_config.client_dir_path);
         let server_output = Command::new("java")
             .arg("-jar")
             .arg(self.client_file_path(client_dir_path))
+            .arg("nogui")
             .args(&server_config.java_arguments)
             .spawn()?
             .wait_with_output()?;
