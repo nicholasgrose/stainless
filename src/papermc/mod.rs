@@ -24,6 +24,12 @@ pub struct PaperMCClient {
     pub application_download: Download,
 }
 
+impl PaperMCClient {
+    pub fn start_server(&self) {
+        println!("START SERVER HERE")
+    }
+}
+
 impl Display for PaperMCClient {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{{Project: {}, Build: {}, Download: {}}}", self.project, self.build, self.application_download)

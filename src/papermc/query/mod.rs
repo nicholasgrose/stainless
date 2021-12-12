@@ -3,6 +3,7 @@ use std::io::Write;
 use std::path::Path;
 
 use anyhow::Error;
+use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use sha2::{Digest, Sha256};
 
@@ -75,36 +76,36 @@ pub async fn download_application_client(project: &PaperMCClient, client_file_pa
         .await?
         .error_for_status()?;
 
+    let content_length = match response.content_length() {
+        Some(len) => len,
+        None => return Err(Error::msg("no content delivered for download")),
+    };
+    let progress_bar = ProgressBar::new(content_length);
+    progress_bar.set_style(ProgressStyle::default_bar()
+        .template("[{elapsed_precise}] {bar:40.cyan/blue} {bytes:.1f}/{total_bytes:.1f} ({bytes_per_sec}) {msg}")
+    );
     let mut client_file = File::create(client_file_path)?;
     let mut hasher = Sha256::default();
 
+    progress_bar.set_message("Downloading...");
     loop {
         let chunk = match response.chunk().await? {
             Some(chunk) => chunk,
             None => break,
         };
 
+        progress_bar.inc(chunk.len() as u64);
         hasher.write_all(&chunk)?;
         client_file.write_all(&chunk)?;
     }
 
+    progress_bar.finish_with_message("Done");
     let hash = hasher.finalize();
     if hash[..] == project.application_download.sha256 {
+        println!("{} Download checksum correct!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
         Ok(())
     } else {
+        println!("{} Download checksum does not match!", emoji::symbols::other_symbol::CROSS_MARK.glyph);
         Err(Error::msg("download does not match hash"))
     }
-
-    // let hash = digest_bytes(&response_bytes);
-    //
-    // if hash == project.application_download.sha256 {
-    //     let path = format!("{}/{}", path, project.application_download.name);
-    //     let path = Path::new(&path);
-    //     File::create(path)?
-    //         .write_all(&response_bytes);
-    //
-    //     Ok(())
-    // } else {
-    //     Err(Error::msg("download does not match hash"))
-    // }
 }
