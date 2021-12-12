@@ -613,10 +613,10 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d76e8e1493bcac0d2766c42737f34458f1c8c50c0d23bcb24ea953affb273216"
 dependencies = [
- "cfg-if",
- "instant",
- "libc",
- "redox_syscall",
+    "cfg-if",
+    "instant",
+    "libc",
+    "redox_syscall",
     "smallvec",
     "winapi",
 ]

@@ -26,16 +26,16 @@ async fn main() {
             Err(e) => {
                 eprintln!("Error occurred while running server: {}", e);
                 None
-            },
+            }
         };
 
         if server_should_stop() {
-            if let Some(client) = run_client {
-                match client.delete_client(&server_config.client_dir_path) {
-                    Ok(_) => println!("Client deleted successfully!"),
-                    Err(e) => eprintln!("Error occurred while deleting client: {}", e),
-                };
-            }
+            // if let Some(client) = run_client {
+            // match client.delete_client(&server_config.client_dir_path) {
+            //     Ok(_) => println!("Client deleted successfully!"),
+            //     Err(e) => eprintln!("Error occurred while deleting client: {}", e),
+            // };
+            // }
             break;
         }
     }
@@ -46,36 +46,37 @@ async fn start_server<'a>(server_config: &'a ServerConfig, http_client: &Client)
     let current_client = match &server_config.latest_client {
         Some(latest_client) => {
             match latest_client.download_client(&server_config.client_dir_path, http_client).await {
-                Ok(()) => Some(latest_client),
+                Ok(_) => Some(latest_client),
                 Err(e) => {
                     println!("{} Failed to download latest client! ({})", emoji::symbols::warning::WARNING.glyph, e);
                     println!("{} Attempting to roll back to previous client.", emoji::symbols::alphanum::INFORMATION.glyph);
                     Option::from(&server_config.previous_client)
                 }
             }
-        },
+        }
         None => {
             println!("{} No new client could be found.", emoji::symbols::alphanum::INFORMATION.glyph);
             println!("{} Attempting to roll back to previous client.", emoji::symbols::alphanum::INFORMATION.glyph);
             Option::from(&server_config.previous_client)
-        },
+        }
     };
 
     match current_client {
         Some(client) => {
-            client.start_server();
+            let result = client.start_server(&server_config)?;
+            println!("{} Server finished: ({})", emoji::symbols::alphanum::INFORMATION.glyph, result);
             Ok(client)
-        },
+        }
         None => Err(Error::msg("no valid server client could be acquired"))
     }
 }
 
 #[allow(dead_code)]
-struct ServerConfig {
-    previous_client: Option<PaperMCClient>,
-    latest_client: Option<PaperMCClient>,
-    client_dir_path: String,
-    java_arguments: Vec<String>,
+pub struct ServerConfig {
+    pub previous_client: Option<PaperMCClient>,
+    pub latest_client: Option<PaperMCClient>,
+    pub client_dir_path: String,
+    pub java_arguments: Vec<String>,
 }
 
 // TODO: Make this load from a config file

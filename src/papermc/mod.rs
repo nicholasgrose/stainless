@@ -1,9 +1,12 @@
 use std::fmt::{Display, Formatter};
 use std::fs::remove_file;
 use std::path::{Path, PathBuf};
+use std::process::{Command, ExitStatus};
 
 use anyhow::Error;
 use reqwest::Client;
+
+use crate::ServerConfig;
 
 pub mod query;
 
@@ -22,12 +25,6 @@ pub struct PaperMCClient {
     pub project: PaperMCProject,
     pub build: i32,
     pub application_download: Download,
-}
-
-impl PaperMCClient {
-    pub fn start_server(&self) {
-        println!("START SERVER HERE")
-    }
 }
 
 impl Display for PaperMCClient {
@@ -57,6 +54,17 @@ impl PaperMCClient {
         remove_file(self.client_file_path(client_dir_path))?;
 
         Ok(())
+    }
+
+    pub fn start_server(&self, server_config: &ServerConfig) -> Result<ExitStatus, Error> {
+        let client_dir_path = Path::new(&server_config.client_dir_path);
+        let server_output = Command::new("java")
+            .arg("-jar")
+            .arg(self.client_file_path(client_dir_path))
+            .args(&server_config.java_arguments)
+            .spawn()?
+            .wait_with_output()?;
+        Ok(server_output.status)
     }
 }
 
