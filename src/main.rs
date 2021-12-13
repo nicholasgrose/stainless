@@ -57,11 +57,13 @@ async fn start_server<'a>(server_config: &'a ServerConfig, http_client: &Client)
 }
 
 async fn update_client<'a>(server_config: &'a ServerConfig, http_client: &Client) -> Option<&'a PaperMCClient> {
+    println!("{} Checking for client updates...", emoji::symbols::alphanum::INFORMATION.glyph);
+
     match &server_config.latest_client {
         Some(latest_client) => {
-            println!("{} Updating client to {}...", emoji::symbols::alphanum::INFORMATION.glyph, latest_client.application_download.name);
+            println!("{} Latest client is {}!", emoji::symbols::other_symbol::CHECK_MARK.glyph, latest_client.application_download.name);
 
-            match latest_client.download_client(&server_config.client_dir_path, http_client).await {
+            match latest_client.download_client(http_client).await {
                 Ok(_) => Some(latest_client),
                 Err(e) => {
                     println!("{} Failed to download latest client! ({})", emoji::symbols::warning::WARNING.glyph, e);
@@ -78,11 +80,9 @@ async fn update_client<'a>(server_config: &'a ServerConfig, http_client: &Client
     }
 }
 
-#[allow(dead_code)]
 pub struct ServerConfig {
     pub previous_client: Option<PaperMCClient>,
     pub latest_client: Option<PaperMCClient>,
-    pub client_dir_path: String,
     pub java_arguments: Vec<String>,
 }
 
@@ -101,7 +101,6 @@ async fn load_server_configuration(http_client: &Client) -> Result<ServerConfig,
     Ok(ServerConfig {
         previous_client: None,
         latest_client: Some(latest_client),
-        client_dir_path: String::from("."),
         java_arguments: vec!(),
     })
 }

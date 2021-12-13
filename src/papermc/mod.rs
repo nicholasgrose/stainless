@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::fs::remove_file;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, ExitStatus};
 
 use anyhow::Error;
@@ -34,28 +34,20 @@ impl Display for PaperMCClient {
 }
 
 impl PaperMCClient {
-    pub async fn download_client(&self, client_dir_path: &str, http_client: &Client) -> Result<(), Error> {
+    pub async fn download_client(&self, http_client: &Client) -> Result<(), Error> {
         println!("{} Downloading {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
-
-        let client_dir_path = Path::new(client_dir_path);
-        let client_file_path = self.client_file_path(client_dir_path);
 
         query::download_application_client(
             self,
-            client_file_path.as_path(),
+            Path::new(&self.application_download.name),
             http_client,
         ).await
     }
 
-    fn client_file_path(&self, client_dir_path: &Path) -> PathBuf {
-        client_dir_path.join(Path::new(&self.application_download.name))
-    }
-
-    pub fn delete_client(&self, client_dir_path: &str) -> Result<(), Error> {
+    pub fn delete_client(&self) -> Result<(), Error> {
         println!("{} Removing {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
 
-        let client_dir_path = Path::new(client_dir_path);
-        remove_file(self.client_file_path(client_dir_path))?;
+        remove_file(Path::new(&self.application_download.name))?;
 
         Ok(())
     }
@@ -63,10 +55,9 @@ impl PaperMCClient {
     pub fn start_server(&self, server_config: &ServerConfig) -> Result<ExitStatus, Error> {
         println!("{} Starting {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
 
-        let client_dir_path = Path::new(&server_config.client_dir_path);
         let server_output = Command::new("java")
             .arg("-jar")
-            .arg(self.client_file_path(client_dir_path))
+            .arg(&self.application_download.name)
             .arg("nogui")
             .args(&server_config.java_arguments)
             .spawn()?
