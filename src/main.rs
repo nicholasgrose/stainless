@@ -137,7 +137,7 @@ fn load_server_configuration() -> Result<ServerConfig> {
             client_name: "papermc".to_string(),
             project: PaperMCProject {
                 name: String::from("paper"),
-                version: String::from("1.18"),
+                version: String::from("1.18.1"),
             },
             java_arguments: vec!(),
         },
