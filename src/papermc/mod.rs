@@ -12,11 +12,16 @@ use crate::{Client, CLIENT_INFO_DIR_PATH, ClientConfig};
 pub mod query;
 
 pub struct PaperMCConfig {
+    pub client_name: String,
     pub project: PaperMCProject,
     pub java_arguments: Vec<String>,
 }
 
-impl ClientConfig for PaperMCConfig {}
+impl ClientConfig for PaperMCConfig {
+    fn client_name(&self) -> &str {
+        self.client_name.as_str()
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PaperMCProject {
@@ -50,7 +55,7 @@ impl Client<PaperMCConfig, PaperMCClient> for PaperMCClient {
             .await?;
 
         if latest_client.build > self.build {
-            println!("{} Newer client is available: {} over {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, latest_client.build, self.build);
+            println!("{} Newer client build is available: {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, latest_client.build);
             Ok(Some(latest_client))
         } else {
             println!("{} No newer client is available!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
@@ -76,15 +81,15 @@ impl Client<PaperMCConfig, PaperMCClient> for PaperMCClient {
         Ok(())
     }
 
-    fn save_client_info(&self) -> crate::Result<()> {
-        let client_info_file = File::create(Path::new(&client_info_file_path()))?;
+    fn save_client_info(&self, client_config: &PaperMCConfig) -> crate::Result<()> {
+        let client_info_file = File::create(Path::new(&client_info_file_path(client_config.client_name())))?;
         bincode::serialize_into(client_info_file, self)?;
 
         Ok(())
     }
 
-    fn delete_client_info(&self) -> crate::Result<()> {
-        std::fs::remove_file(Path::new(&client_info_file_path()))?;
+    fn delete_client_info(&self, client_config: &PaperMCConfig) -> crate::Result<()> {
+        std::fs::remove_file(Path::new(&client_info_file_path(client_config.client_name())))?;
 
         Ok(())
     }
@@ -129,14 +134,17 @@ impl Display for Download {
     }
 }
 
-fn client_info_file_path() -> String {
-    format!("{}/{}", CLIENT_INFO_DIR_PATH, "papermc")
+fn client_info_file_path(client_name: &str) -> String {
+    format!("{}/{}", CLIENT_INFO_DIR_PATH, client_name)
 }
 
-pub fn load_saved_client() -> crate::Result<PaperMCClient> {
-    let client_info_path = client_info_file_path();
+pub fn load_saved_client(client_config: &PaperMCConfig) -> crate::Result<PaperMCClient> {
+    let client_info_path = client_info_file_path(&client_config.client_name());
     let saved_client_path = Path::new(&client_info_path);
     let saved_client_file = File::open(saved_client_path)?;
+    let saved_client: PaperMCClient = bincode::deserialize_from(saved_client_file)?;
 
-    Ok(bincode::deserialize_from(saved_client_file)?)
+    println!("{} Found existing client: {} build {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, saved_client.project.name, saved_client.build);
+
+    Ok(saved_client)
 }

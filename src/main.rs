@@ -13,15 +13,17 @@ static CLIENT_INFO_DIR_PATH: &str = "stainless/.clients";
 
 type Result<T> = std::result::Result<T, Error>;
 
-pub trait ClientConfig {}
+pub trait ClientConfig {
+    fn client_name(&self) -> &str;
+}
 
 #[async_trait]
 pub trait Client<C: ClientConfig, T: Client<C, T>> {
     async fn check_for_updated_client(&self, config: &C, http_client: &HttpClient) -> Result<Option<T>>;
     async fn download_client(&self, http_client: &HttpClient) -> Result<()>;
     fn delete_client(&self) -> Result<()>;
-    fn save_client_info(&self) -> Result<()>;
-    fn delete_client_info(&self) -> Result<()>;
+    fn save_client_info(&self, client_config: &C) -> Result<()>;
+    fn delete_client_info(&self, client_config: &C) -> Result<()>;
     fn start_client(&self, config: &C) -> Result<Output>;
 }
 
@@ -51,16 +53,13 @@ async fn main() {
             }
         };
 
-        let existing_client = match load_saved_client() {
-            Ok(client_found) => {
-                println!("{} Found existing client!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
-                Some(client_found)
-            }
+        let existing_client = match load_saved_client(&server_config.papermc_config) {
+            Ok(client_found) => Some(client_found),
             Err(e) => {
-                println!("{} Could not load saved client: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
+                println!("{} Could not load saved client: {}", emoji::symbols::warning::WARNING.glyph, e);
                 println!("{} Assuming no client exists...", emoji::symbols::alphanum::INFORMATION.glyph);
                 None
-            }
+            },
         };
 
         let default_client = PaperMCClient::default(&server_config.papermc_config.project);
@@ -87,13 +86,14 @@ async fn main() {
                 }
             },
             Err(e) => {
-                println!("{} Error occurred while loading saved client: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
+                println!("{} Error occurred while checking for updated client: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
                 existing_client
             },
         };
 
         let run_result = match &existing_client {
             Some(client) => {
+                println!("{} Using client {}!", emoji::symbols::other_symbol::CHECK_MARK.glyph, client.application_download.name);
                 client.start_client(&server_config.papermc_config)
             }
             None => {
@@ -106,7 +106,7 @@ async fn main() {
 
         if server_should_stop() {
             if let Some(client) = existing_client {
-                match client.save_client_info() {
+                match client.save_client_info(&server_config.papermc_config) {
                     Ok(_) => println!("{} Successfully saved client info!", emoji::symbols::other_symbol::CHECK_MARK.glyph),
                     Err(e) => println!("{} Unable to save client info: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e)
                 }
@@ -128,50 +128,13 @@ fn display_server_result(run_result: &Result<Output>) {
     }
 }
 
-// async fn start_server<'a>(server_config: &'a ServerConfig, http_client: &HttpClient) -> Result<&'a PaperMCClient> {
-//     let current_client = update_client(server_config, http_client).await;
-//
-//     match current_client {
-//         Some(client) => {
-//             println!("{} Using {}!", emoji::symbols::other_symbol::CHECK_MARK.glyph, client.application_download.name);
-//             let result = client.start_client(&server_config)?;
-//             println!("{} Server finished: ({})", emoji::symbols::alphanum::INFORMATION.glyph, result);
-//             Ok(client)
-//         }
-//         None => Err(Error::msg("no valid server client could be acquired"))
-//     }
-// }
-//
-// async fn update_client<'a>(server_config: &'a ServerConfig, http_client: &HttpClient) -> Option<&'a PaperMCClient> {
-//     println!("{} Checking for client updates...", emoji::symbols::alphanum::INFORMATION.glyph);
-//
-//     match &server_config.latest_client {
-//         Some(latest_client) => {
-//             println!("{} Latest client is {}!", emoji::symbols::other_symbol::CHECK_MARK.glyph, latest_client.application_download.name);
-//
-//             match latest_client.download_client(http_client).await {
-//                 Ok(_) => Some(latest_client),
-//                 Err(e) => {
-//                     println!("{} Failed to download latest client! ({})", emoji::symbols::warning::WARNING.glyph, e);
-//                     println!("{} Attempting to roll back to previous client.", emoji::symbols::alphanum::INFORMATION.glyph);
-//                     Option::from(&server_config.previous_client)
-//                 }
-//             }
-//         }
-//         None => {
-//             println!("{} No new client to update to.", emoji::symbols::alphanum::INFORMATION.glyph);
-//             println!("{} Attempting to roll back to previous client.", emoji::symbols::alphanum::INFORMATION.glyph);
-//             Option::from(&server_config.previous_client)
-//         }
-//     }
-// }
-
 // TODO: Make this load from a config file
 fn load_server_configuration() -> Result<ServerConfig> {
     println!("{} Loading server configuration...", emoji::symbols::alphanum::INFORMATION.glyph);
 
     Ok(ServerConfig {
         papermc_config: PaperMCConfig {
+            client_name: "papermc".to_string(),
             project: PaperMCProject {
                 name: String::from("paper"),
                 version: String::from("1.18"),
