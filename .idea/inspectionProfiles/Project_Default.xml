@@ -62,7 +62,7 @@
     <inspection_tool class="ContinueStatementJS" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="ContinueStatementWithLabelJS" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="CrateNotFound" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="CrateVersionInvalid" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="CrateVersionInvalid" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="CssBrowserCompatibilityForProperties" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="CssConvertColorToHexInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="CssConvertColorToRgbInspection" enabled="false" level="WARNING" enabled_by_default="false" />
@@ -395,7 +395,7 @@
     <inspection_tool class="NestingDepthJS" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="m_limit" value="5" />
     </inspection_tool>
-    <inspection_tool class="NewCrateVersionAvailable" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="NewCrateVersionAvailable" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="NoAttributeForProperty" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="NoClassDefinition" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="NoDefaultBaseConstructor" enabled="true" level="WARNING" enabled_by_default="true" />
@@ -601,7 +601,7 @@
     <inspection_tool class="RsCStringPointer" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsCastToBool" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="RsConstNaming" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="RsConstantConditionIf" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="RsConstantConditionIf" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsDanglingElse" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsDeprecation" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsDetachedFile" enabled="true" level="WARNING" enabled_by_default="true" />
@@ -626,7 +626,7 @@
     <inspection_tool class="RsModuleNaming" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsNeedlessLifetimes" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="RsNonExhaustiveMatch" enabled="true" level="ERROR" enabled_by_default="true" />
-    <inspection_tool class="RsNonShorthandFieldPatterns" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="RsNonShorthandFieldPatterns" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="RsReassignImmutable" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="RsRedundantElse" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsSelfConvention" enabled="true" level="WARNING" enabled_by_default="true" />
@@ -642,12 +642,12 @@
     <inspection_tool class="RsTypeAliasNaming" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsTypeCheck" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="RsTypeParameterNaming" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="RsUnknownCrateTypes" enabled="false" level="ERROR" enabled_by_default="false" />
-    <inspection_tool class="RsUnreachableCode" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="RsUnknownCrateTypes" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RsUnreachableCode" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsUnreachablePatterns" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsUnresolvedReference" enabled="true" level="ERROR" enabled_by_default="true" />
-    <inspection_tool class="RsUnusedImport" enabled="false" level="WARNING" enabled_by_default="false" />
-    <inspection_tool class="RsVariableMutable" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="RsUnusedImport" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsVariableMutable" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsVariableNaming" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="RsWhileTrueLoop" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="RsWrongGenericArgumentsNumber" enabled="true" level="ERROR" enabled_by_default="true" />

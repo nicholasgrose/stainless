@@ -13,12 +13,12 @@ use crate::papermc::query::response_schema::{BuildResponse, Download as SchemaDo
 mod url;
 mod response_schema;
 
-pub async fn latest_papermc_client_for_project(project: PaperMCProject, http_client: &Client) -> Result<PaperMCClient, Error> {
-    let latest_build = latest_project_build(&project, http_client).await?;
-    let application_download = application_build_download(&project, &latest_build, http_client).await?;
+pub async fn latest_papermc_client_for_project(project: &PaperMCProject, http_client: &Client) -> crate::Result<PaperMCClient> {
+    let latest_build = latest_project_build(project, http_client).await?;
+    let application_download = application_build_download(project, &latest_build, http_client).await?;
 
     Ok(PaperMCClient {
-        project,
+        project: project.clone(),
         build: latest_build,
         application_download: Download {
             name: application_download.name,
@@ -27,7 +27,7 @@ pub async fn latest_papermc_client_for_project(project: PaperMCProject, http_cli
     })
 }
 
-async fn application_build_download(project: &PaperMCProject, latest_build: &i32, http_client: &Client) -> Result<SchemaDownload, Error> {
+async fn application_build_download(project: &PaperMCProject, latest_build: &i32, http_client: &Client) -> crate::Result<SchemaDownload> {
     let build_response = call_papermc_project_build_api(&project, &latest_build, &http_client)
         .await?;
 
@@ -37,7 +37,7 @@ async fn application_build_download(project: &PaperMCProject, latest_build: &i32
     }
 }
 
-async fn latest_project_build(project: &PaperMCProject, http_client: &Client) -> Result<i32, Error> {
+async fn latest_project_build(project: &PaperMCProject, http_client: &Client) -> crate::Result<i32> {
     let build_response = call_papermc_project_version_api(&project, &http_client)
         .await?;
 
@@ -47,7 +47,7 @@ async fn latest_project_build(project: &PaperMCProject, http_client: &Client) ->
     }
 }
 
-async fn call_papermc_project_version_api(project: &PaperMCProject, http_client: &Client) -> Result<VersionResponse, Error> {
+async fn call_papermc_project_version_api(project: &PaperMCProject, http_client: &Client) -> crate::Result<VersionResponse> {
     Ok(http_client
         .get(url::papermc_project_version_url(project))
         .send()
@@ -58,7 +58,7 @@ async fn call_papermc_project_version_api(project: &PaperMCProject, http_client:
     )
 }
 
-async fn call_papermc_project_build_api(project: &PaperMCProject, build: &i32, http_client: &Client) -> Result<BuildResponse, Error> {
+async fn call_papermc_project_build_api(project: &PaperMCProject, build: &i32, http_client: &Client) -> crate::Result<BuildResponse> {
     Ok(http_client
         .get(url::papermc_project_build_url(project, build))
         .send()
@@ -69,7 +69,7 @@ async fn call_papermc_project_build_api(project: &PaperMCProject, build: &i32, h
     )
 }
 
-pub async fn download_application_client(project: &PaperMCClient, client_file_path: &Path, http_client: &Client) -> Result<(), Error> {
+pub async fn download_application_client(project: &PaperMCClient, client_file_path: &Path, http_client: &Client) -> crate::Result<()> {
     let mut response = http_client
         .get(url::papermc_project_download_url(project))
         .send()
