@@ -4,22 +4,41 @@ use std::path::Path;
 use std::process::{Command, Output};
 
 use async_trait::async_trait;
-use reqwest::Client as HttpClient;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::{Client, CLIENT_INFO_DIR_PATH, ClientConfig};
+use crate::{SERVER_INFO_DIR_PATH, ServerApplication, ServerConfig};
 
 pub mod query;
 
 pub struct PaperMCConfig {
-    pub client_name: String,
+    pub server_name: String,
     pub project: PaperMCProject,
-    pub java_arguments: Vec<String>,
+    pub jvm_arguments: Vec<String>,
 }
 
-impl ClientConfig for PaperMCConfig {
-    fn client_name(&self) -> &str {
-        self.client_name.as_str()
+impl ServerConfig<PaperMCConfig, PaperMCServer> for PaperMCConfig {
+    fn server_name(&self) -> &str {
+        self.server_name.as_str()
+    }
+
+    fn jvm_arguments(&self) -> &Vec<String> {
+        self.jvm_arguments.as_ref()
+    }
+
+    fn load_saved_client(&self) -> crate::Result<PaperMCServer> {
+        let client_info_path = self.client_info_file_path();
+        let saved_client_path = Path::new(&client_info_path);
+        let saved_client_file = File::open(saved_client_path)?;
+        let saved_client: PaperMCServer = bincode::deserialize_from(saved_client_file)?;
+
+        println!("{} Found existing server: {} build {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, saved_client.project.name, saved_client.build);
+
+        Ok(saved_client)
+    }
+
+    fn client_info_file_path(&self) -> String {
+        format!("{}/{}", SERVER_INFO_DIR_PATH, self.server_name)
     }
 }
 
@@ -36,44 +55,44 @@ impl Display for PaperMCProject {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct PaperMCClient {
+pub struct PaperMCServer {
     pub project: PaperMCProject,
     pub build: i32,
     pub application_download: Download,
 }
 
-impl Display for PaperMCClient {
+impl Display for PaperMCServer {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{{Project: {}, Build: {}, Download: {}}}", self.project, self.build, self.application_download)
     }
 }
 
 #[async_trait]
-impl Client<PaperMCConfig, PaperMCClient> for PaperMCClient {
-    async fn check_for_updated_client(&self, _config: &PaperMCConfig, http_client: &HttpClient) -> crate::Result<Option<PaperMCClient>> {
-        let latest_client = query::latest_papermc_client_for_project(&self.project, http_client)
+impl ServerApplication<PaperMCConfig, PaperMCServer> for PaperMCServer {
+    async fn check_for_updated_server(&self, _config: &PaperMCConfig, http_client: &Client) -> crate::Result<Option<PaperMCServer>> {
+        let latest_client = query::latest_papermc_server_for_project(&self.project, http_client)
             .await?;
 
         if latest_client.build > self.build {
-            println!("{} Newer client build is available: {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, latest_client.build);
+            println!("{} Newer server build is available: {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, latest_client.build);
             Ok(Some(latest_client))
         } else {
-            println!("{} No newer client is available!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
+            println!("{} No newer server is available!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
             Ok(None)
         }
     }
 
-    async fn download_client(&self, http_client: &HttpClient) -> crate::Result<()> {
+    async fn download_server(&self, http_client: &Client) -> crate::Result<()> {
         println!("{} Downloading {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
 
-        query::download_application_client(
+        query::download_server_application(
             self,
             Path::new(&self.application_download.name),
             http_client,
         ).await
     }
 
-    fn delete_client(&self) -> crate::Result<()> {
+    fn delete_server(&self) -> crate::Result<()> {
         println!("{} Removing {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
 
         remove_file(Path::new(&self.application_download.name))?;
@@ -81,27 +100,27 @@ impl Client<PaperMCConfig, PaperMCClient> for PaperMCClient {
         Ok(())
     }
 
-    fn save_client_info(&self, client_config: &PaperMCConfig) -> crate::Result<()> {
-        let client_info_file = File::create(Path::new(&client_info_file_path(client_config.client_name())))?;
+    fn save_server_info(&self, client_config: &PaperMCConfig) -> crate::Result<()> {
+        let client_info_file = File::create(Path::new(&client_config.client_info_file_path()))?;
         bincode::serialize_into(client_info_file, self)?;
 
         Ok(())
     }
 
-    fn delete_client_info(&self, client_config: &PaperMCConfig) -> crate::Result<()> {
-        std::fs::remove_file(Path::new(&client_info_file_path(client_config.client_name())))?;
+    fn delete_server_info(&self, client_config: &PaperMCConfig) -> crate::Result<()> {
+        std::fs::remove_file(Path::new(&client_config.client_info_file_path()))?;
 
         Ok(())
     }
 
-    fn start_client(&self, server_config: &PaperMCConfig) -> crate::Result<Output> {
+    fn start_server(&self, server_config: &PaperMCConfig) -> crate::Result<Output> {
         println!("{} Starting {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_download.name);
 
         let server_output = Command::new("java")
             .arg("-jar")
             .arg(&self.application_download.name)
             .arg("nogui")
-            .args(&server_config.java_arguments)
+            .args(server_config.jvm_arguments())
             .spawn()?
             .wait_with_output()?;
 
@@ -109,10 +128,10 @@ impl Client<PaperMCConfig, PaperMCClient> for PaperMCClient {
     }
 }
 
-impl PaperMCClient {
-    pub fn default(project: &PaperMCProject) -> PaperMCClient {
-        return PaperMCClient {
-            project: project.clone(),
+impl PaperMCServer {
+    pub fn default(config: &PaperMCConfig) -> PaperMCServer {
+        return PaperMCServer {
+            project: config.project.clone(),
             build: -1,
             application_download: Download {
                 name: String::from(""),
@@ -132,19 +151,4 @@ impl Display for Download {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{{Name: {}, SHA256: {}}}", self.name, hex::encode(&self.sha256))
     }
-}
-
-fn client_info_file_path(client_name: &str) -> String {
-    format!("{}/{}", CLIENT_INFO_DIR_PATH, client_name)
-}
-
-pub fn load_saved_client(client_config: &PaperMCConfig) -> crate::Result<PaperMCClient> {
-    let client_info_path = client_info_file_path(&client_config.client_name());
-    let saved_client_path = Path::new(&client_info_path);
-    let saved_client_file = File::open(saved_client_path)?;
-    let saved_client: PaperMCClient = bincode::deserialize_from(saved_client_file)?;
-
-    println!("{} Found existing client: {} build {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, saved_client.project.name, saved_client.build);
-
-    Ok(saved_client)
 }

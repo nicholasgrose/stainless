@@ -7,17 +7,17 @@ use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use sha2::{Digest, Sha256};
 
-use crate::papermc::{Download, PaperMCClient, PaperMCProject};
+use crate::papermc::{Download, PaperMCProject, PaperMCServer};
 use crate::papermc::query::response_schema::{BuildResponse, Download as SchemaDownload, VersionResponse};
 
 mod url;
 mod response_schema;
 
-pub async fn latest_papermc_client_for_project(project: &PaperMCProject, http_client: &Client) -> crate::Result<PaperMCClient> {
+pub async fn latest_papermc_server_for_project(project: &PaperMCProject, http_client: &Client) -> crate::Result<PaperMCServer> {
     let latest_build = latest_project_build(project, http_client).await?;
     let application_download = application_build_download(project, &latest_build, http_client).await?;
 
-    Ok(PaperMCClient {
+    Ok(PaperMCServer {
         project: project.clone(),
         build: latest_build,
         application_download: Download {
@@ -33,7 +33,7 @@ async fn application_build_download(project: &PaperMCProject, latest_build: &i32
 
     match build_response.application_download() {
         Some(download) => Ok(download.clone()),
-        None => Err(Error::msg("no client application downloads found for latest build of project")),
+        None => Err(Error::msg("no server application downloads found for latest build of project")),
     }
 }
 
@@ -43,7 +43,7 @@ async fn latest_project_build(project: &PaperMCProject, http_client: &Client) ->
 
     match build_response.most_recent_build() {
         Some(build) => Ok(build.clone()),
-        None => Err(Error::msg("no builds found for provided project")),
+        None => Err(Error::msg("no builds found for provided papermc project")),
     }
 }
 
@@ -69,7 +69,7 @@ async fn call_papermc_project_build_api(project: &PaperMCProject, build: &i32, h
     )
 }
 
-pub async fn download_application_client(project: &PaperMCClient, client_file_path: &Path, http_client: &Client) -> crate::Result<()> {
+pub async fn download_server_application(project: &PaperMCServer, client_file_path: &Path, http_client: &Client) -> crate::Result<()> {
     let mut response = http_client
         .get(url::papermc_project_download_url(project))
         .send()

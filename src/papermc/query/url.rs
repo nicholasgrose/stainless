@@ -1,5 +1,5 @@
 use crate::papermc::PaperMCProject;
-use crate::PaperMCClient;
+use crate::PaperMCServer;
 
 static PAPERMC_API_BASE_URL: &str = "https://papermc.io/api/v2";
 
@@ -11,6 +11,6 @@ pub fn papermc_project_build_url(project: &PaperMCProject, build: &i32) -> Strin
     format!("{}/builds/{}", papermc_project_version_url(project), build)
 }
 
-pub fn papermc_project_download_url(server_client: &PaperMCClient) -> String {
+pub fn papermc_project_download_url(server_client: &PaperMCServer) -> String {
     format!("{}/downloads/{}", papermc_project_build_url(&server_client.project, &server_client.build), server_client.application_download.name)
 }
