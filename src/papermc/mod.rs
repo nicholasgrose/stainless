@@ -26,7 +26,7 @@ impl Server<PaperMCServer, PaperMCServerApp> for PaperMCServer {
         self.jvm_arguments.as_ref()
     }
 
-    fn load_saved_client(&self) -> crate::Result<PaperMCServerApp> {
+    fn load_saved_server_app(&self) -> crate::Result<PaperMCServerApp> {
         let client_info_path = self.client_info_file_path();
         let saved_client_path = Path::new(&client_info_path);
         let saved_client_file = File::open(saved_client_path)?;
