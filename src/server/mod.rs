@@ -6,6 +6,8 @@ use reqwest::Client;
 
 use crate::config::ServerType;
 
+mod control;
+
 pub trait Server<S: Server<S, A>, A: ServerApplication<S, A>> {
     fn server_name(&self) -> &str;
     fn jvm_arguments(&self) -> &Vec<String>;
@@ -23,6 +25,21 @@ pub trait ServerApplication<C: Server<C, A>, A: ServerApplication<C, A>> {
     fn save_server_info(&self, client_config: &C) -> crate::Result<()>;
     fn delete_server_info(&self, client_config: &C) -> crate::Result<()>;
     fn start_server(&self, config: &C) -> crate::Result<Output>;
+}
+
+pub async fn initialize_server_loop(server_type: &ServerType, http_client: &Client) {
+    loop {
+        println!("{} Starting server initialization...", emoji::symbols::alphanum::INFORMATION.glyph);
+
+        if let Err(e) = run_configured_server(server_type, http_client).await {
+            println!("{} Server encountered unrecoverable error: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
+            break;
+        }
+
+        if control::server_should_stop() {
+            break;
+        }
+    }
 }
 
 pub async fn run_configured_server(server_type: &ServerType, http_client: &Client) -> crate::Result<()> {
