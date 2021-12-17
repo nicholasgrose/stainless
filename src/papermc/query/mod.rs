@@ -7,17 +7,17 @@ use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use sha2::{Digest, Sha256};
 
-use crate::papermc::{Download, PaperMCProject, PaperMCServer};
+use crate::papermc::{Download, PaperMCProject, PaperMCServerApp};
 use crate::papermc::query::response_schema::{BuildResponse, Download as SchemaDownload, VersionResponse};
 
 mod url;
 mod response_schema;
 
-pub async fn latest_papermc_server_for_project(project: &PaperMCProject, http_client: &Client) -> crate::Result<PaperMCServer> {
+pub async fn latest_papermc_server_for_project(project: &PaperMCProject, http_client: &Client) -> crate::Result<PaperMCServerApp> {
     let latest_build = latest_project_build(project, http_client).await?;
     let application_download = application_build_download(project, &latest_build, http_client).await?;
 
-    Ok(PaperMCServer {
+    Ok(PaperMCServerApp {
         project: project.clone(),
         build: latest_build,
         application_download: Download {
@@ -69,7 +69,7 @@ async fn call_papermc_project_build_api(project: &PaperMCProject, build: &i32, h
     )
 }
 
-pub async fn download_server_application(project: &PaperMCServer, client_file_path: &Path, http_client: &Client) -> crate::Result<()> {
+pub async fn download_server_application(project: &PaperMCServerApp, client_file_path: &Path, http_client: &Client) -> crate::Result<()> {
     let mut response = http_client
         .get(url::papermc_project_download_url(project))
         .send()
