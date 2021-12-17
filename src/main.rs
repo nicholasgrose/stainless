@@ -11,15 +11,8 @@ mod config;
 
 type Result<T> = std::result::Result<T, Error>;
 
-static SERVER_INFO_DIR_PATH: &str = "stainless/.clients";
-
 #[tokio::main]
 async fn main() {
-    if let Err(e) = std::fs::create_dir_all(SERVER_INFO_DIR_PATH) {
-        println!("{} Could not create stainless directories: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
-        return;
-    }
-
     let stainless_config = match config::load_stainless_config() {
         Ok(config) => config,
         Err(e) => {
