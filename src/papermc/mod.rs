@@ -7,7 +7,8 @@ use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::{Server, SERVER_INFO_DIR_PATH, ServerApplication};
+use crate::SERVER_INFO_DIR_PATH;
+use crate::server::{Server, ServerApplication};
 
 pub mod query;
 

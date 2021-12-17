@@ -1,5 +1,6 @@
-use crate::{PaperMCServerApp, ServerApplication};
 use crate::papermc::PaperMCProject;
+use crate::PaperMCServerApp;
+use crate::server::ServerApplication;
 
 static PAPERMC_API_BASE_URL: &str = "https://papermc.io/api/v2";
 
