@@ -6,18 +6,11 @@ use crate::papermc::{PaperMCProject, PaperMCServer, PaperMCServerApp};
 
 mod papermc;
 mod server;
+mod config;
 
 type Result<T> = std::result::Result<T, Error>;
 
 static SERVER_INFO_DIR_PATH: &str = "stainless/.clients";
-
-pub struct StainlessConfig {
-    pub server: ServerType,
-}
-
-pub enum ServerType {
-    PaperMC(PaperMCServer),
-}
 
 #[tokio::main]
 async fn main() {
@@ -30,7 +23,7 @@ async fn main() {
     loop {
         println!("{} Starting server initialization...", emoji::symbols::alphanum::INFORMATION.glyph);
 
-        let stainless_config = match load_server_configuration() {
+        let stainless_config = match config::load_server_configuration() {
             Ok(config) => config,
             Err(e) => {
                 println!("{} Error occurred while loading Stainless configuration: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
@@ -38,11 +31,7 @@ async fn main() {
             }
         };
 
-        let server = match stainless_config.server {
-            ServerType::PaperMC(config) => config,
-        };
-
-        if let Err(e) = server::run_server(&server, &http_client).await {
+        if let Err(e) = server::run_configured_server(&stainless_config.server, &http_client).await {
             println!("{} Server encountered unrecoverable error: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
             break;
         }
@@ -51,24 +40,6 @@ async fn main() {
             break;
         }
     }
-}
-
-// TODO: Make this load from a config file
-fn load_server_configuration() -> Result<StainlessConfig> {
-    println!("{} Loading server configuration...", emoji::symbols::alphanum::INFORMATION.glyph);
-
-    println!("{} Stainless configuration loaded!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
-
-    Ok(StainlessConfig {
-        server: ServerType::PaperMC(PaperMCServer {
-            server_name: "papermc".to_string(),
-            project: PaperMCProject {
-                name: "paper".to_string(),
-                version: "1.18.1".to_string(),
-            },
-            jvm_arguments: vec!(),
-        })
-    })
 }
 
 // TODO: Make this take user input

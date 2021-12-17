@@ -4,6 +4,8 @@ use anyhow::Error;
 use async_trait::async_trait;
 use reqwest::Client;
 
+use crate::config::ServerType;
+
 pub trait Server<S: Server<S, A>, A: ServerApplication<S, A>> {
     fn server_name(&self) -> &str;
     fn jvm_arguments(&self) -> &Vec<String>;
@@ -23,7 +25,15 @@ pub trait ServerApplication<C: Server<C, A>, A: ServerApplication<C, A>> {
     fn start_server(&self, config: &C) -> crate::Result<Output>;
 }
 
-pub async fn run_server<S: Server<S, A>, A: ServerApplication<S, A>>(server: &S, http_client: &Client) -> crate::Result<()> {
+pub async fn run_configured_server(server_type: &ServerType, http_client: &Client) -> crate::Result<()> {
+    let server = match server_type {
+        ServerType::PaperMC(config) => config,
+    };
+
+    run_server(server, http_client).await
+}
+
+async fn run_server<S: Server<S, A>, A: ServerApplication<S, A>>(server: &S, http_client: &Client) -> crate::Result<()> {
     let server_app = acquire_server_app(server, http_client)
         .await;
 
