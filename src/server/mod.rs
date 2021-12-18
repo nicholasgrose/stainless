@@ -97,7 +97,7 @@ async fn update_server_app<S: Server<S, A>, A: ServerApplication<S, A>>(existing
         .check_for_updated_server(server, http_client)
         .await {
         Ok(update_result) => {
-            download_server_app_if_new_one_exists(update_result, existing_server_app, http_client)
+            replace_server_app_if_new_one_exists(update_result, existing_server_app, http_client)
                 .await
         }
         Err(e) => {
@@ -108,11 +108,19 @@ async fn update_server_app<S: Server<S, A>, A: ServerApplication<S, A>>(existing
     }
 }
 
-async fn download_server_app_if_new_one_exists<S: Server<S, A>, A: ServerApplication<S, A>>(update_result: Option<A>, existing_server_app: Option<A>, http_client: &Client) -> Option<A> {
+async fn replace_server_app_if_new_one_exists<S: Server<S, A>, A: ServerApplication<S, A>>(update_result: Option<A>, existing_server_app: Option<A>, http_client: &Client) -> Option<A> {
     match update_result {
-        Some(updated_client) => {
-            match updated_client.download_server(http_client).await {
-                Ok(_) => Some(updated_client),
+        Some(updated_server_app) => {
+            match updated_server_app.download_server(http_client).await {
+                Ok(_) => {
+                    if let Some(app) = existing_server_app {
+                        match app.delete_server() {
+                            Ok(_) => println!("{} Successfully deleted deprecated server app!", emoji::symbols::other_symbol::CHECK_MARK.glyph),
+                            Err(e) => println!("{} Failed to delete old server app: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e),
+                        }
+                    }
+                    Some(updated_server_app)
+                },
                 Err(e) => {
                     println!("{} Failed to download updated server: {}", emoji::symbols::warning::WARNING.glyph, e);
                     existing_server_app
