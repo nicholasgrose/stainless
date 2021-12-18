@@ -28,9 +28,11 @@ pub trait ServerApplication<C: Server<C, A>, A: ServerApplication<C, A>> {
 }
 
 pub async fn initialize_server_loop(server_type: &ServerType, http_client: &Client) {
-    println!("{} Starting server initialization...", emoji::symbols::alphanum::INFORMATION.glyph);
+    println!("{} Entering server loop...", emoji::symbols::alphanum::INFORMATION.glyph);
 
     loop {
+        println!("{} Starting server...", emoji::symbols::alphanum::INFORMATION.glyph);
+
         if let Err(e) = run_configured_server(server_type, http_client).await {
             println!("{} Server encountered unrecoverable error: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
             break;
