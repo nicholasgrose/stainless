@@ -14,15 +14,15 @@ type Result<T> = std::result::Result<T, Error>;
 
 #[tokio::main]
 async fn main() {
-    let stainless_config = match config::load_stainless_config() {
+    let http_client = Client::new();
+
+    let stainless_config = match config::load_stainless_config(&http_client).await {
         Ok(config) => config,
         Err(e) => {
             println!("{} Error occurred while loading Stainless configuration: {}", CROSS_MARK.glyph, e);
             return;
         }
     };
-
-    let http_client = Client::new();
 
     initialize_server_loop(&stainless_config.server, &http_client).await
 }

@@ -7,6 +7,7 @@ use emoji::symbols::other_symbol::{CHECK_MARK, CROSS_MARK};
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use sha2::{Digest, Sha256};
+use crate::config::constants::DOWNLOAD_PROGRESS_BAR_TEMPLATE;
 
 use crate::papermc::{Download, PaperMCProject, PaperMCServerApp};
 use crate::papermc::query::response_schema::{BuildResponse, Download as SchemaDownload, VersionResponse};
@@ -83,7 +84,7 @@ pub async fn download_server_application(project: &PaperMCServerApp, client_file
     };
     let progress_bar = ProgressBar::new(content_length);
     progress_bar.set_style(ProgressStyle::default_bar()
-        .template("[{elapsed_precise}] {bar:40.cyan/blue} {bytes:.1f}/{total_bytes:.1f} ({bytes_per_sec}) {msg}")
+        .template(DOWNLOAD_PROGRESS_BAR_TEMPLATE)
     );
     let mut client_file = File::create(client_file_path)?;
     let mut hasher = Sha256::default();
