@@ -1,3 +1,5 @@
+use emoji::symbols::alphanum::INFORMATION;
+use emoji::symbols::other_symbol::CHECK_MARK;
 use crate::{PaperMCProject, PaperMCServer};
 use crate::config::constants::SERVER_INFO_DIR_PATH;
 
@@ -15,9 +17,9 @@ pub enum ServerType {
 pub fn load_stainless_config() -> crate::Result<StainlessConfig> {
     std::fs::create_dir_all(SERVER_INFO_DIR_PATH)?;
 
-    println!("{} Loading server configuration...", emoji::symbols::alphanum::INFORMATION.glyph);
+    println!("{} Loading server configuration...", INFORMATION.glyph);
 
-    println!("{} Stainless configuration loaded!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
+    println!("{} Stainless configuration loaded!", CHECK_MARK.glyph);
 
     Ok(StainlessConfig {
         server: ServerType::PaperMC(PaperMCServer {

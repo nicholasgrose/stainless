@@ -2,6 +2,8 @@ use std::process::Output;
 
 use anyhow::Error;
 use async_trait::async_trait;
+use emoji::symbols::alphanum::INFORMATION;
+use emoji::symbols::other_symbol::{CHECK_MARK, CROSS_MARK};
 use reqwest::Client;
 
 use crate::config::ServerType;
@@ -28,13 +30,13 @@ pub trait ServerApplication<C: Server<C, A>, A: ServerApplication<C, A>> {
 }
 
 pub async fn initialize_server_loop(server_type: &ServerType, http_client: &Client) {
-    println!("{} Entering server loop...", emoji::symbols::alphanum::INFORMATION.glyph);
+    println!("{} Entering server loop...", INFORMATION.glyph);
 
     loop {
-        println!("{} Starting server...", emoji::symbols::alphanum::INFORMATION.glyph);
+        println!("{} Starting server...", INFORMATION.glyph);
 
         if let Err(e) = run_configured_server(server_type, http_client).await {
-            println!("{} Server encountered unrecoverable error: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
+            println!("{} Server encountered unrecoverable error: {}", CROSS_MARK.glyph, e);
             break;
         }
 
@@ -58,11 +60,11 @@ async fn run_server<S: Server<S, A>, A: ServerApplication<S, A>>(server: &S, htt
 
     let run_result = match &server_app {
         Some(server_app) => {
-            println!("{} Using server {}!", emoji::symbols::other_symbol::CHECK_MARK.glyph, server_app.application_name());
+            println!("{} Using server {}!", CHECK_MARK.glyph, server_app.application_name());
             server_app.start_server(server)
         }
         None => {
-            println!("{} No valid server could be acquired to run!", emoji::symbols::other_symbol::CROSS_MARK.glyph);
+            println!("{} No valid server could be acquired to run!", CROSS_MARK.glyph);
             return Err(Error::msg("could not find valid server to run"));
         }
     };
@@ -78,7 +80,7 @@ async fn acquire_server_app<S: Server<S, A>, A: ServerApplication<S, A>>(server:
         Ok(client_found) => Some(client_found),
         Err(e) => {
             println!("{} Could not load saved server: {}", emoji::symbols::warning::WARNING.glyph, e);
-            println!("{} Assuming no server application exists...", emoji::symbols::alphanum::INFORMATION.glyph);
+            println!("{} Assuming no server application exists...", INFORMATION.glyph);
             None
         }
     };
@@ -101,8 +103,8 @@ async fn update_server_app<S: Server<S, A>, A: ServerApplication<S, A>>(existing
                 .await
         }
         Err(e) => {
-            println!("{} Error occurred while checking for updated server: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
-            println!("{} Attempting to roll back to existing server!", emoji::symbols::alphanum::INFORMATION.glyph);
+            println!("{} Error occurred while checking for updated server: {}", CROSS_MARK.glyph, e);
+            println!("{} Attempting to roll back to existing server!", INFORMATION.glyph);
             existing_server_app
         }
     }
@@ -115,8 +117,8 @@ async fn replace_server_app_if_new_one_exists<S: Server<S, A>, A: ServerApplicat
                 Ok(_) => {
                     if let Some(app) = existing_server_app {
                         match app.delete_server() {
-                            Ok(_) => println!("{} Successfully deleted deprecated server app!", emoji::symbols::other_symbol::CHECK_MARK.glyph),
-                            Err(e) => println!("{} Failed to delete old server app: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e),
+                            Ok(_) => println!("{} Successfully deleted deprecated server app!", CHECK_MARK.glyph),
+                            Err(e) => println!("{} Failed to delete old server app: {}", CROSS_MARK.glyph, e),
                         }
                     }
                     Some(updated_server_app)
@@ -134,10 +136,10 @@ async fn replace_server_app_if_new_one_exists<S: Server<S, A>, A: ServerApplicat
 fn display_server_result(run_result: &crate::Result<Output>) {
     match run_result {
         Ok(result) => {
-            println!("{} Server exited with: ({})", emoji::symbols::alphanum::INFORMATION.glyph, result.status)
+            println!("{} Server exited with: ({})", INFORMATION.glyph, result.status)
         }
         Err(e) => {
-            println!("{} Server encountered an error: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e)
+            println!("{} Server encountered an error: {}", CROSS_MARK.glyph, e)
         }
     }
 }
@@ -145,8 +147,8 @@ fn display_server_result(run_result: &crate::Result<Output>) {
 fn save_server_info_if_exists<S: Server<S, A>, A: ServerApplication<S, A>>(server: &S, server_app: &Option<A>) {
     if let Some(client) = server_app {
         match client.save_server_info(server) {
-            Ok(_) => println!("{} Successfully saved server info!", emoji::symbols::other_symbol::CHECK_MARK.glyph),
-            Err(e) => println!("{} Unable to save server info: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e)
+            Ok(_) => println!("{} Successfully saved server info!", CHECK_MARK.glyph),
+            Err(e) => println!("{} Unable to save server info: {}", CROSS_MARK.glyph, e)
         }
     }
 }

@@ -4,6 +4,8 @@ use std::path::Path;
 use std::process::{Command, Output};
 
 use async_trait::async_trait;
+use emoji::symbols::alphanum::INFORMATION;
+use emoji::symbols::other_symbol::CHECK_MARK;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -33,7 +35,7 @@ impl Server<PaperMCServer, PaperMCServerApp> for PaperMCServer {
         let saved_client_file = File::open(saved_client_path)?;
         let saved_client: PaperMCServerApp = bincode::deserialize_from(saved_client_file)?;
 
-        println!("{} Found existing server: {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, saved_client.application_name());
+        println!("{} Found existing server: {}", CHECK_MARK.glyph, saved_client.application_name());
 
         Ok(saved_client)
     }
@@ -83,16 +85,16 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
             .await?;
 
         if latest_client.build > self.build {
-            println!("{} Newer server build is available: {}", emoji::symbols::other_symbol::CHECK_MARK.glyph, latest_client.build);
+            println!("{} Newer server build is available: {}", CHECK_MARK.glyph, latest_client.build);
             Ok(Some(latest_client))
         } else {
-            println!("{} No newer server is available!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
+            println!("{} No newer server is available!", CHECK_MARK.glyph);
             Ok(None)
         }
     }
 
     async fn download_server(&self, http_client: &Client) -> crate::Result<()> {
-        println!("{} Downloading {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_name());
+        println!("{} Downloading {}...", INFORMATION.glyph, self.application_name());
 
         query::download_server_application(
             self,
@@ -102,7 +104,7 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
     }
 
     fn delete_server(&self) -> crate::Result<()> {
-        println!("{} Removing {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_name());
+        println!("{} Removing {}...", INFORMATION.glyph, self.application_name());
 
         remove_file(Path::new(&self.application_name()))?;
 
@@ -123,7 +125,7 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
     }
 
     fn start_server(&self, server_config: &PaperMCServer) -> crate::Result<Output> {
-        println!("{} Starting {}...", emoji::symbols::alphanum::INFORMATION.glyph, self.application_name());
+        println!("{} Starting {}...", INFORMATION.glyph, self.application_name());
 
         let server_output = Command::new("java")
             .arg("-jar")

@@ -3,6 +3,7 @@ use std::io::Write;
 use std::path::Path;
 
 use anyhow::Error;
+use emoji::symbols::other_symbol::{CHECK_MARK, CROSS_MARK};
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use sha2::{Digest, Sha256};
@@ -102,10 +103,10 @@ pub async fn download_server_application(project: &PaperMCServerApp, client_file
     progress_bar.finish_with_message("Done");
     let hash = hasher.finalize();
     if hash[..] == project.application_download.sha256 {
-        println!("{} Download checksum correct!", emoji::symbols::other_symbol::CHECK_MARK.glyph);
+        println!("{} Download checksum correct!", CHECK_MARK.glyph);
         Ok(())
     } else {
-        println!("{} Download checksum does not match!", emoji::symbols::other_symbol::CROSS_MARK.glyph);
+        println!("{} Download checksum does not match!", CROSS_MARK.glyph);
         Err(Error::msg("download does not match hash"))
     }
 }

@@ -1,4 +1,5 @@
 use anyhow::Error;
+use emoji::symbols::other_symbol::CROSS_MARK;
 use reqwest::Client;
 use tokio;
 
@@ -16,7 +17,7 @@ async fn main() {
     let stainless_config = match config::load_stainless_config() {
         Ok(config) => config,
         Err(e) => {
-            println!("{} Error occurred while loading Stainless configuration: {}", emoji::symbols::other_symbol::CROSS_MARK.glyph, e);
+            println!("{} Error occurred while loading Stainless configuration: {}", CROSS_MARK.glyph, e);
             return;
         }
     };
