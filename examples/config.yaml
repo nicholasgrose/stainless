@@ -1,0 +1,7 @@
+server:
+  papermc:
+    server_name: TestServer
+    project:
+      name: paper
+      version: 1.18.1
+    jvm_arguments: []

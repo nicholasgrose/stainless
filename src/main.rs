@@ -3,7 +3,7 @@ use emoji::symbols::other_symbol::CROSS_MARK;
 use reqwest::Client;
 use tokio;
 
-use crate::papermc::{PaperMCProject, PaperMCServer, PaperMCServerApp};
+use crate::papermc::{PaperMCServer, PaperMCServerApp};
 use crate::server::initialize_server_loop;
 
 mod papermc;

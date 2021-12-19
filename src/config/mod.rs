@@ -1,14 +1,22 @@
+use config::{Config, File};
 use emoji::symbols::alphanum::INFORMATION;
 use emoji::symbols::other_symbol::CHECK_MARK;
-use crate::{PaperMCProject, PaperMCServer};
-use crate::config::constants::SERVER_INFO_DIR_PATH;
+use serde::{Deserialize, Serialize};
+
+use crate::PaperMCServer;
+use crate::config::constants::{SERVER_INFO_DIR_PATH, STAINLESS_CONFIG_PATH};
 
 pub mod constants;
 
-pub struct StainlessConfig {
+pub type StainlessConfig = Stainless;
+
+#[derive(Serialize, Deserialize)]
+pub struct Stainless {
     pub server: ServerType,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum ServerType {
     PaperMC(PaperMCServer),
 }
@@ -19,16 +27,11 @@ pub fn load_stainless_config() -> crate::Result<StainlessConfig> {
 
     println!("{} Loading server configuration...", INFORMATION.glyph);
 
+    let mut config = Config::default();
+    config.merge(File::with_name(STAINLESS_CONFIG_PATH))?;
+    let result: StainlessConfig = config.try_into()?;
+
     println!("{} Stainless configuration loaded!", CHECK_MARK.glyph);
 
-    Ok(StainlessConfig {
-        server: ServerType::PaperMC(PaperMCServer {
-            server_name: "papermc".to_string(),
-            project: PaperMCProject {
-                name: "paper".to_string(),
-                version: "1.18.1".to_string(),
-            },
-            jvm_arguments: vec!(),
-        })
-    })
+    Ok(result)
 }

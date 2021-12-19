@@ -14,6 +14,7 @@ use crate::server::{Server, ServerApplication};
 
 pub mod query;
 
+#[derive(Serialize, Deserialize)]
 pub struct PaperMCServer {
     pub server_name: String,
     pub project: PaperMCProject,
@@ -77,7 +78,7 @@ impl Display for PaperMCServerApp {
 #[async_trait]
 impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
     fn application_name(&self) -> &str {
-        return &self.application_download.name
+        return &self.application_download.name;
     }
 
     async fn check_for_updated_server(&self, _config: &PaperMCServer, http_client: &Client) -> crate::Result<Option<PaperMCServerApp>> {
