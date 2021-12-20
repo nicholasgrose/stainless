@@ -41,7 +41,9 @@ pub async fn initialize_server_loop(server_type: &ServerType, http_client: &Clie
         }
 
         if control::server_should_stop() {
-            break;
+            println!("{} Server stopped!", INFORMATION.glyph);
+
+            break
         }
     }
 }

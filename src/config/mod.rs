@@ -28,7 +28,6 @@ pub enum ServerType {
     PaperMC(PaperMCServer),
 }
 
-// TODO: Make this load from a config file
 pub async fn load_stainless_config(http_client: &Client) -> crate::Result<StainlessConfig> {
     generate_stainless_files_and_directories(http_client).await?;
 
