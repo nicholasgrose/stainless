@@ -5,8 +5,12 @@ use async_trait::async_trait;
 use emoji::symbols::alphanum::INFORMATION;
 use emoji::symbols::other_symbol::{CHECK_MARK, CROSS_MARK};
 use reqwest::Client;
+use tempfile::TempDir;
+use tokio::net::UnixDatagram;
+use tokio::select;
 
 use crate::config::ServerType;
+use crate::server::control::create_control_socket;
 
 mod control;
 
@@ -29,8 +33,34 @@ pub trait ServerApplication<C: Server<C, A>, A: ServerApplication<C, A>> {
     fn start_server(&self, config: &C) -> crate::Result<Output>;
 }
 
-pub async fn initialize_server_loop(server_type: &ServerType, http_client: &Client) {
+pub async fn begin_server_task(server_type: &ServerType, http_client: &Client, temp_dir: &TempDir) {
+    let control_socket_result = create_control_socket(temp_dir).await;
+
+    match control_socket_result {
+        Ok(socket) => {
+            select! {
+                control_thread_result = socket.control_thread => {
+                    match control_thread_result {
+                        Ok(thread_run_result) => match thread_run_result {
+                            Ok(_) => println!("Control thread exited without error"),
+                            Err(e) => println!("Error encountered while running control: {}", e),
+                        },
+                        Err(e) => println!("Error encountered while spawning control: {}", e),
+                    }
+                }
+                _ = initialize_server_loop(server_type, http_client, &socket.control_receiver) => {
+                    println!("Server loop ended")
+                }
+            }
+        }
+        Err(e) => println!("Error making control socket: {}", e)
+    }
+}
+
+async fn initialize_server_loop(server_type: &ServerType, http_client: &Client, control_socket: &UnixDatagram) {
     println!("{} Entering server loop...", INFORMATION.glyph);
+
+    // println!("RECEIVED: {}", String::from_utf8(Vec::from(&buffer[..result])).unwrap_or("ERR".to_string()));
 
     loop {
         println!("{} Starting server...", INFORMATION.glyph);
@@ -40,10 +70,23 @@ pub async fn initialize_server_loop(server_type: &ServerType, http_client: &Clie
             break;
         }
 
-        if control::server_should_stop() {
-            println!("{} Server stopped!", INFORMATION.glyph);
+        let should_stop_result = control::server_should_stop(control_socket).await;
 
-            break
+        match should_stop_result {
+            Ok(should_stop) => {
+                if should_stop {
+                    println!("{} Server stopped!", INFORMATION.glyph);
+
+                    break
+                } else {
+                    println!("{} Restarting...", INFORMATION.glyph)
+                }
+            }
+            Err(e) => {
+                println!("{} Stainless encountered error reading input: {}", CROSS_MARK.glyph, e);
+
+                break
+            }
         }
     }
 }
@@ -124,7 +167,7 @@ async fn replace_server_app_if_new_one_exists<S: Server<S, A>, A: ServerApplicat
                         }
                     }
                     Some(updated_server_app)
-                },
+                }
                 Err(e) => {
                     println!("{} Failed to download updated server: {}", emoji::symbols::warning::WARNING.glyph, e);
                     existing_server_app

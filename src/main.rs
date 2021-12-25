@@ -4,7 +4,6 @@ use reqwest::Client;
 use tokio;
 
 use crate::papermc::{PaperMCServer, PaperMCServerApp};
-use crate::server::initialize_server_loop;
 
 mod papermc;
 mod server;
@@ -24,5 +23,13 @@ async fn main() {
         }
     };
 
-    initialize_server_loop(&stainless_config.server, &http_client).await
+    let tmp = match tempfile::tempdir() {
+        Ok(tmp) => tmp,
+        Err(e) => {
+            println!("Could not create temporary directory: {}", e);
+            return;
+        }
+    };
+
+    server::begin_server_task(&stainless_config.server, &http_client, &tmp).await
 }
