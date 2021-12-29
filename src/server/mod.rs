@@ -1,4 +1,4 @@
-use std::process::Output;
+use std::process::ExitStatus;
 
 use anyhow::Error;
 use async_trait::async_trait;
@@ -30,7 +30,7 @@ pub trait ServerApplication<C: Server<C, A>, A: ServerApplication<C, A>> {
     fn delete_server(&self) -> crate::Result<()>;
     fn save_server_info(&self, client_config: &C) -> crate::Result<()>;
     fn delete_server_info(&self, client_config: &C) -> crate::Result<()>;
-    fn start_server(&self, config: &C) -> crate::Result<Output>;
+    async fn start_server(&self, config: &C, input_receiver: &UnixDatagram) -> crate::Result<ExitStatus>;
 }
 
 pub async fn begin_server_task(server_type: &ServerType, http_client: &Client, temp_dir: &TempDir) {
@@ -57,7 +57,7 @@ pub async fn begin_server_task(server_type: &ServerType, http_client: &Client, t
     }
 }
 
-async fn initialize_server_loop(server_type: &ServerType, http_client: &Client, control_socket: &UnixDatagram) {
+async fn initialize_server_loop(server_type: &ServerType, http_client: &Client, input_receiver: &UnixDatagram) {
     println!("{} Entering server loop...", INFORMATION.glyph);
 
     // println!("RECEIVED: {}", String::from_utf8(Vec::from(&buffer[..result])).unwrap_or("ERR".to_string()));
@@ -65,12 +65,12 @@ async fn initialize_server_loop(server_type: &ServerType, http_client: &Client, 
     loop {
         println!("{} Starting server...", INFORMATION.glyph);
 
-        if let Err(e) = run_configured_server(server_type, http_client).await {
+        if let Err(e) = run_configured_server(server_type, http_client, input_receiver).await {
             println!("{} Server encountered unrecoverable error: {}", CROSS_MARK.glyph, e);
             break;
         }
 
-        let should_stop_result = control::server_should_stop(control_socket).await;
+        let should_stop_result = control::server_should_stop(input_receiver).await;
 
         match should_stop_result {
             Ok(should_stop) => {
@@ -91,22 +91,22 @@ async fn initialize_server_loop(server_type: &ServerType, http_client: &Client, 
     }
 }
 
-pub async fn run_configured_server(server_type: &ServerType, http_client: &Client) -> crate::Result<()> {
+pub async fn run_configured_server(server_type: &ServerType, http_client: &Client, input_receiver: &UnixDatagram) -> crate::Result<()> {
     let server = match server_type {
         ServerType::PaperMC(config) => config,
     };
 
-    run_server(server, http_client).await
+    run_server(server, http_client, input_receiver).await
 }
 
-async fn run_server<S: Server<S, A>, A: ServerApplication<S, A>>(server: &S, http_client: &Client) -> crate::Result<()> {
+async fn run_server<S: Server<S, A>, A: ServerApplication<S, A>>(server: &S, http_client: &Client, input_receiver: &UnixDatagram) -> crate::Result<()> {
     let server_app = acquire_server_app(server, http_client)
         .await;
 
     let run_result = match &server_app {
         Some(server_app) => {
             println!("{} Using server {}!", CHECK_MARK.glyph, server_app.application_name());
-            server_app.start_server(server)
+            server_app.start_server(server, input_receiver).await
         }
         None => {
             println!("{} No valid server could be acquired to run!", CROSS_MARK.glyph);
@@ -178,10 +178,10 @@ async fn replace_server_app_if_new_one_exists<S: Server<S, A>, A: ServerApplicat
     }
 }
 
-fn display_server_result(run_result: &crate::Result<Output>) {
+fn display_server_result(run_result: &crate::Result<ExitStatus>) {
     match run_result {
         Ok(result) => {
-            println!("{} Server exited with: ({})", INFORMATION.glyph, result.status)
+            println!("{} Server exited with: ({})", INFORMATION.glyph, result)
         }
         Err(e) => {
             println!("{} Server encountered an error: {}", CROSS_MARK.glyph, e)

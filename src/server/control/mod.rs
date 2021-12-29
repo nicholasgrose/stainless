@@ -19,8 +19,6 @@ pub async fn create_control_socket(temp_dir: &TempDir) -> crate::Result<ServerCo
 
     let control_task = tokio::spawn(write_input(tx, rx_path));
 
-    println!("LEAVING CONTROL");
-
     Ok(ServerControl {
         control_thread: control_task,
         control_receiver: rx,

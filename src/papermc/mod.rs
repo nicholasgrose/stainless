@@ -1,13 +1,18 @@
 use std::fmt::{Display, Formatter};
 use std::fs::{File, remove_file};
 use std::path::Path;
-use std::process::{Command, Output};
+use std::process::{ExitStatus, Stdio};
 
+use anyhow::Error;
 use async_trait::async_trait;
 use emoji::symbols::alphanum::INFORMATION;
 use emoji::symbols::other_symbol::CHECK_MARK;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use tokio::{pin, select};
+use tokio::io::AsyncWriteExt;
+use tokio::net::UnixDatagram;
+use tokio::process::Command;
 
 use crate::config::constants::SERVER_INFO_DIR_PATH;
 use crate::server::{Server, ServerApplication};
@@ -125,18 +130,54 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
         Ok(())
     }
 
-    fn start_server(&self, server_config: &PaperMCServer) -> crate::Result<Output> {
+    async fn start_server(&self, server_config: &PaperMCServer, input_receiver: &UnixDatagram) -> crate::Result<ExitStatus> {
         println!("{} Starting {}...", INFORMATION.glyph, self.application_name());
 
-        let server_output = Command::new("java")
+        let mut server_process = Command::new("java")
             .arg("-jar")
             .arg(&self.application_name())
             .arg("nogui")
             .args(server_config.jvm_arguments())
-            .spawn()?
-            .wait_with_output()?;
+            .stdin(Stdio::piped())
+            .spawn()?;
 
-        Ok(server_output)
+        let mut child_in = server_process.stdin.take().unwrap();
+
+        let server_task = server_process.wait();
+        pin!(server_task);
+
+        loop {
+            println!("LOOPING");
+            let mut input_buffer = vec![0; 1024];
+
+            select! {
+                receive_result = input_receiver.recv_from(&mut input_buffer) => {
+                    let (bytes_received, _) = match receive_result {
+                        Ok(received) => received,
+                        Err(e) => {
+                            println!("Failed to receive bytes from control: {}", e);
+                            return Err(Error::from(e))
+                        }
+                    };
+                    let bytes_to_write = input_buffer;
+                    println!("Writing: {}", String::from_utf8(Vec::from(bytes_to_write))?);
+
+                    child_in.write_all(bytes_to_write).await?
+                }
+                server_result = &mut server_task => {
+                    match server_result {
+                        Ok(output) => {
+                            println!("Exited server without error.");
+                            return Ok(output)
+                        },
+                        Err(e) => {
+                            println!("Error occurred running server: {}", e);
+                            return Err(Error::from(e))
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
