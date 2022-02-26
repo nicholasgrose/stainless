@@ -33,8 +33,9 @@ impl Server<PaperMCServer, PaperMCServerApp> for PaperMCServer {
     fn load_saved_server_app(&self) -> crate::Result<PaperMCServerApp> {
         let client_info_path = self.client_info_file_path();
         let saved_client_path = Path::new(&client_info_path);
-        let saved_client_file = File::open(saved_client_path)?;
-        let saved_client: PaperMCServerApp = bincode::deserialize_from(saved_client_file)?;
+        let mut saved_client_file = File::open(saved_client_path)?;
+        let save_config = bincode::config::standard().write_fixed_array_length();
+        let saved_client: PaperMCServerApp = bincode::serde::decode_from_std_read(&mut saved_client_file, save_config)?;
 
         println!("{} Found existing server: {}", CHECK_MARK.glyph, saved_client.application_name());
 
@@ -113,8 +114,9 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
     }
 
     fn save_server_info(&self, client_config: &PaperMCServer) -> crate::Result<()> {
-        let client_info_file = File::create(Path::new(&client_config.client_info_file_path()))?;
-        bincode::serialize_into(client_info_file, self)?;
+        let mut client_info_file = File::create(Path::new(&client_config.client_info_file_path()))?;
+        let save_config = bincode::config::standard().write_fixed_array_length();
+        bincode::serde::encode_into_std_write(self, &mut client_info_file, save_config)?;
 
         Ok(())
     }
