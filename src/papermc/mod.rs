@@ -131,10 +131,10 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
         println!("{} Starting {}...", INFORMATION.glyph, self.application_name());
 
         let server_output = Command::new("java")
+            .args(server_config.jvm_arguments())
             .arg("-jar")
             .arg(&self.application_name())
             .arg("nogui")
-            .args(server_config.jvm_arguments())
             .spawn()?
             .wait_with_output()?;
 
