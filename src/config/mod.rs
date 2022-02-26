@@ -1,8 +1,9 @@
 use std::fs;
 use std::io::{ErrorKind, Write};
 use std::path::Path;
+
 use anyhow::Error;
-use config::{Config};
+use config::Config;
 use emoji::symbols::alphanum::INFORMATION;
 use emoji::symbols::other_symbol::CHECK_MARK;
 use emoji::symbols::warning::WARNING;
@@ -10,8 +11,8 @@ use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::PaperMCServer;
 use crate::config::constants::{DOWNLOAD_PROGRESS_BAR_TEMPLATE, SERVER_INFO_DIR_PATH, STAINLESS_CONFIG_PATH, STAINLESS_DEFAULT_CONFIG_URL};
+use crate::PaperMCServer;
 
 pub mod constants;
 
@@ -33,13 +34,14 @@ pub async fn load_stainless_config(http_client: &Client) -> crate::Result<Stainl
 
     println!("{} Loading server configuration...", INFORMATION.glyph);
 
-    let mut config = Config::default();
-    config.merge(config::File::with_name(STAINLESS_CONFIG_PATH))?;
-    let result: StainlessConfig = config.try_into()?;
+    let config: StainlessConfig = Config::builder()
+        .add_source(config::File::with_name(STAINLESS_CONFIG_PATH))
+        .build()?
+        .try_deserialize()?;
 
     println!("{} Stainless configuration loaded!", CHECK_MARK.glyph);
 
-    Ok(result)
+    Ok(config)
 }
 
 async fn generate_stainless_files_and_directories(http_client: &Client) -> crate::Result<()> {
@@ -66,8 +68,6 @@ async fn generate_stainless_config_file_if_needed(http_client: &Client) -> crate
 
             generate_new_stainless_config_file(http_client, config_path).await?
         }
-
-        return Err(Error::from(e))
     }
 
     Ok(())
@@ -86,8 +86,9 @@ async fn generate_new_stainless_config_file(http_client: &Client, config_path: &
         None => return Err(Error::msg("no content delivered for download")),
     };
     let progress_bar = ProgressBar::new(content_length);
-    progress_bar.set_style(ProgressStyle::default_bar()
-        .template(DOWNLOAD_PROGRESS_BAR_TEMPLATE)
+    progress_bar.set_style(
+        ProgressStyle::default_bar()
+            .template(DOWNLOAD_PROGRESS_BAR_TEMPLATE)?
     );
 
     progress_bar.set_message("Downloading...");
@@ -100,6 +101,7 @@ async fn generate_new_stainless_config_file(http_client: &Client, config_path: &
         progress_bar.inc(chunk.len() as u64);
         config_file.write_all(&chunk)?;
     }
+    config_file.flush()?;
 
     progress_bar.finish_with_message("Done");
     println!("{} Successfully created new configuration file!", CHECK_MARK.glyph);
