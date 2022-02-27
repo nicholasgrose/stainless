@@ -5,9 +5,8 @@ use async_trait::async_trait;
 use emoji::symbols::alphanum::INFORMATION;
 use emoji::symbols::other_symbol::{CHECK_MARK, CROSS_MARK};
 use reqwest::Client;
-use tempfile::TempDir;
-use tokio::net::UnixDatagram;
 use tokio::select;
+use tokio::sync::mpsc::Receiver;
 
 use crate::config::ServerType;
 use crate::server::control::create_control_socket;
@@ -30,14 +29,14 @@ pub trait ServerApplication<C: Server<C, A>, A: ServerApplication<C, A>> {
     fn delete_server(&self) -> crate::Result<()>;
     fn save_server_info(&self, client_config: &C) -> crate::Result<()>;
     fn delete_server_info(&self, client_config: &C) -> crate::Result<()>;
-    async fn start_server(&self, config: &C, input_receiver: &UnixDatagram) -> crate::Result<ExitStatus>;
+    async fn start_server(&self, config: &C, input_receiver: &mut Receiver<u8>) -> crate::Result<ExitStatus>;
 }
 
-pub async fn begin_server_task(server_type: &ServerType, http_client: &Client, temp_dir: &TempDir) {
-    let control_socket_result = create_control_socket(temp_dir).await;
+pub async fn begin_server_task(server_type: &ServerType, http_client: &Client) {
+    let control_socket_result = create_control_socket().await;
 
     match control_socket_result {
-        Ok(socket) => {
+        Ok(mut socket) => {
             select! {
                 control_thread_result = socket.control_thread => {
                     match control_thread_result {
@@ -48,7 +47,7 @@ pub async fn begin_server_task(server_type: &ServerType, http_client: &Client, t
                         Err(e) => println!("Error encountered while spawning control: {}", e),
                     }
                 }
-                _ = initialize_server_loop(server_type, http_client, &socket.control_receiver) => {
+                _ = initialize_server_loop(server_type, http_client, &mut socket.control_receiver) => {
                     println!("Server loop ended")
                 }
             }
@@ -57,10 +56,8 @@ pub async fn begin_server_task(server_type: &ServerType, http_client: &Client, t
     }
 }
 
-async fn initialize_server_loop(server_type: &ServerType, http_client: &Client, input_receiver: &UnixDatagram) {
+async fn initialize_server_loop(server_type: &ServerType, http_client: &Client, input_receiver: &mut Receiver<u8>) {
     println!("{} Entering server loop...", INFORMATION.glyph);
-
-    // println!("RECEIVED: {}", String::from_utf8(Vec::from(&buffer[..result])).unwrap_or("ERR".to_string()));
 
     loop {
         println!("{} Starting server...", INFORMATION.glyph);
@@ -91,7 +88,7 @@ async fn initialize_server_loop(server_type: &ServerType, http_client: &Client, 
     }
 }
 
-pub async fn run_configured_server(server_type: &ServerType, http_client: &Client, input_receiver: &UnixDatagram) -> crate::Result<()> {
+pub async fn run_configured_server(server_type: &ServerType, http_client: &Client, input_receiver: &mut Receiver<u8>) -> crate::Result<()> {
     let server = match server_type {
         ServerType::PaperMC(config) => config,
     };
@@ -99,7 +96,7 @@ pub async fn run_configured_server(server_type: &ServerType, http_client: &Clien
     run_server(server, http_client, input_receiver).await
 }
 
-async fn run_server<S: Server<S, A>, A: ServerApplication<S, A>>(server: &S, http_client: &Client, input_receiver: &UnixDatagram) -> crate::Result<()> {
+async fn run_server<S: Server<S, A>, A: ServerApplication<S, A>>(server: &S, http_client: &Client, input_receiver: &mut Receiver<u8>) -> crate::Result<()> {
     let server_app = acquire_server_app(server, http_client)
         .await;
 

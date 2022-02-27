@@ -1,23 +1,19 @@
-use std::path::PathBuf;
 use std::time::Duration;
 
-use tempfile::TempDir;
-use tokio::net::UnixDatagram;
+use tokio::io::AsyncReadExt;
 use tokio::select;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::task::JoinHandle;
 
 pub struct ServerControl {
     pub control_thread: JoinHandle<crate::Result<()>>,
-    pub control_receiver: UnixDatagram,
+    pub control_receiver: Receiver<u8>,
 }
 
-pub async fn create_control_socket(temp_dir: &TempDir) -> crate::Result<ServerControl> {
-    let tx_path = temp_dir.path().join("tx");
-    let tx = UnixDatagram::bind(&tx_path)?;
-    let rx_path = temp_dir.path().join("rx");
-    let rx = UnixDatagram::bind(&rx_path)?;
+pub async fn create_control_socket() -> crate::Result<ServerControl> {
+    let (tx, rx) = tokio::sync::mpsc::channel::<u8>(1024);
 
-    let control_task = tokio::spawn(write_input(tx, rx_path));
+    let control_task = tokio::spawn(write_input(tx));
 
     Ok(ServerControl {
         control_thread: control_task,
@@ -25,19 +21,17 @@ pub async fn create_control_socket(temp_dir: &TempDir) -> crate::Result<ServerCo
     })
 }
 
-async fn write_input(tx: UnixDatagram, rx_path: PathBuf) -> crate::Result<()> {
-    let input = std::io::stdin();
-    let mut buffer = String::new();
+async fn write_input(tx: Sender<u8>) -> crate::Result<()> {
+    let mut input = tokio::io::stdin();
 
     loop {
-        let bytes_read = input.read_line(&mut buffer)?;
-        let bytes_to_write = &buffer.as_bytes()[..bytes_read];
+        let byte_read = input.read_u8().await?;
 
-        tx.send_to(bytes_to_write, &rx_path).await?;
+        tx.send(byte_read).await?;
     }
 }
 
-pub async fn server_should_stop(socket: &UnixDatagram) -> crate::Result<bool> {
+pub async fn server_should_stop(socket: &mut Receiver<u8>) -> crate::Result<bool> {
     loop {
         let sleep = tokio::time::sleep(Duration::from_secs(5));
 
@@ -65,17 +59,21 @@ pub async fn server_should_stop(socket: &UnixDatagram) -> crate::Result<bool> {
     };
 }
 
-async fn should_restart_response(socket: &UnixDatagram) -> crate::Result<String> {
+async fn should_restart_response(socket: &mut Receiver<u8>) -> crate::Result<String> {
     println!("Restart server? [Y/n]");
 
-    let mut buffer = vec![0; 1024];
-    let (bytes_received, _) = socket.recv_from(&mut buffer).await?;
+    let mut line = Vec::<u8>::new();
 
-    let line = String::from_utf8_lossy(&buffer[..bytes_received])
-        .trim_end()
-        .to_lowercase();
+    loop {
+        line.push(
+            match socket.recv().await {
+                Some(byte) => byte,
+                None => return Err(anyhow::Error::msg("Input channel broke."))
+            }
+        );
 
-    println!("GOT: {}", line);
-
-    Ok(line)
+        if line.ends_with(&[b'\n']) {
+            return Ok(String::from_utf8(line)?)
+        }
+    }
 }

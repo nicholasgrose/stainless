@@ -11,8 +11,8 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tokio::{pin, select};
 use tokio::io::AsyncWriteExt;
-use tokio::net::UnixDatagram;
 use tokio::process::Command;
+use tokio::sync::mpsc::Receiver;
 
 use crate::config::constants::SERVER_INFO_DIR_PATH;
 use crate::server::{Server, ServerApplication};
@@ -132,7 +132,7 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
         Ok(())
     }
 
-    async fn start_server(&self, server_config: &PaperMCServer, input_receiver: &UnixDatagram) -> crate::Result<ExitStatus> {
+    async fn start_server(&self, server_config: &PaperMCServer, input_receiver: &mut Receiver<u8>) -> crate::Result<ExitStatus> {
         println!("{} Starting {}...", INFORMATION.glyph, self.application_name());
 
         let mut server_process = Command::new("java")
@@ -149,22 +149,12 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
         pin!(server_task);
 
         loop {
-            println!("LOOPING");
-            let mut input_buffer = vec![0; 1024];
-
             select! {
-                receive_result = input_receiver.recv_from(&mut input_buffer) => {
-                    let (bytes_received, _) = match receive_result {
-                        Ok(received) => received,
-                        Err(e) => {
-                            println!("Failed to receive bytes from control: {}", e);
-                            return Err(Error::from(e))
-                        }
-                    };
-                    let bytes_to_write = input_buffer;
-                    println!("Writing: {}", String::from_utf8(Vec::from(bytes_to_write))?);
-
-                    child_in.write_all(bytes_to_write).await?
+                receive_result = input_receiver.recv() => {
+                    match receive_result {
+                        Some(byte) => child_in.write_u8(byte).await?,
+                        None => return Err(Error::msg("Input channel broke."))
+                    }
                 }
                 server_result = &mut server_task => {
                     match server_result {

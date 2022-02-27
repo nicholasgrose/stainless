@@ -23,13 +23,5 @@ async fn main() {
         }
     };
 
-    let tmp = match tempfile::tempdir() {
-        Ok(tmp) => tmp,
-        Err(e) => {
-            println!("Could not create temporary directory: {}", e);
-            return;
-        }
-    };
-
-    server::begin_server_task(&stainless_config.server, &http_client, &tmp).await
+    server::begin_server_task(&stainless_config.server, &http_client).await
 }
