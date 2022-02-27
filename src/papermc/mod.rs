@@ -6,7 +6,7 @@ use std::process::{ExitStatus, Stdio};
 use anyhow::Error;
 use async_trait::async_trait;
 use emoji::symbols::alphanum::INFORMATION;
-use emoji::symbols::other_symbol::CHECK_MARK;
+use emoji::symbols::other_symbol::{CHECK_MARK, CROSS_MARK};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tokio::{pin, select};
@@ -84,7 +84,7 @@ impl Display for PaperMCServerApp {
 #[async_trait]
 impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
     fn application_name(&self) -> &str {
-        return &self.application_download.name;
+        &self.application_download.name
     }
 
     async fn check_for_updated_server(&self, _config: &PaperMCServer, http_client: &Client) -> crate::Result<Option<PaperMCServerApp>> {
@@ -159,11 +159,10 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
                 server_result = &mut server_task => {
                     match server_result {
                         Ok(output) => {
-                            println!("Exited server without error.");
                             return Ok(output)
                         },
                         Err(e) => {
-                            println!("Error occurred running server: {}", e);
+                            println!("{} Error occurred running server: {}", CROSS_MARK.glyph, e);
                             return Err(Error::from(e))
                         }
                     }
@@ -175,14 +174,14 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
 
 impl PaperMCServerApp {
     pub fn default(config: &PaperMCServer) -> PaperMCServerApp {
-        return PaperMCServerApp {
+        PaperMCServerApp {
             project: config.project.clone(),
             build: -1,
             application_download: Download {
                 name: String::from(""),
                 sha256: vec!(),
             },
-        };
+        }
     }
 }
 

@@ -17,7 +17,7 @@ mod response_schema;
 
 pub async fn latest_papermc_server_for_project(project: &PaperMCProject, http_client: &Client) -> crate::Result<PaperMCServerApp> {
     let latest_build = latest_project_build(project, http_client).await?;
-    let application_download = application_build_download(project, &latest_build, http_client).await?;
+    let application_download = application_build_download(project, latest_build, http_client).await?;
 
     Ok(PaperMCServerApp {
         project: project.clone(),
@@ -29,8 +29,8 @@ pub async fn latest_papermc_server_for_project(project: &PaperMCProject, http_cl
     })
 }
 
-async fn application_build_download(project: &PaperMCProject, latest_build: &i32, http_client: &Client) -> crate::Result<SchemaDownload> {
-    let build_response = call_papermc_project_build_api(&project, &latest_build, &http_client)
+async fn application_build_download(project: &PaperMCProject, latest_build: i32, http_client: &Client) -> crate::Result<SchemaDownload> {
+    let build_response = call_papermc_project_build_api(project, latest_build, http_client)
         .await?;
 
     match build_response.application_download() {
@@ -40,11 +40,11 @@ async fn application_build_download(project: &PaperMCProject, latest_build: &i32
 }
 
 async fn latest_project_build(project: &PaperMCProject, http_client: &Client) -> crate::Result<i32> {
-    let build_response = call_papermc_project_version_api(&project, &http_client)
+    let build_response = call_papermc_project_version_api(project, http_client)
         .await?;
 
     match build_response.most_recent_build() {
-        Some(build) => Ok(build.clone()),
+        Some(build) => Ok(*build),
         None => Err(Error::msg("no builds found for provided papermc project")),
     }
 }
@@ -60,7 +60,7 @@ async fn call_papermc_project_version_api(project: &PaperMCProject, http_client:
     )
 }
 
-async fn call_papermc_project_build_api(project: &PaperMCProject, build: &i32, http_client: &Client) -> crate::Result<BuildResponse> {
+async fn call_papermc_project_build_api(project: &PaperMCProject, build: i32, http_client: &Client) -> crate::Result<BuildResponse> {
     Ok(http_client
         .get(url::papermc_project_build_url(project, build))
         .send()
@@ -91,12 +91,7 @@ pub async fn download_server_application(project: &PaperMCServerApp, client_file
     let mut hasher = Sha256::default();
 
     progress_bar.set_message("Downloading...");
-    loop {
-        let chunk = match response.chunk().await? {
-            Some(chunk) => chunk,
-            None => break,
-        };
-
+    while let Some(chunk) = response.chunk().await? {
         progress_bar.inc(chunk.len() as u64);
         hasher.write_all(&chunk)?;
         client_file.write_all(&chunk)?;
