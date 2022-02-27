@@ -73,7 +73,7 @@ async fn should_restart_response(socket: &mut Receiver<u8>) -> crate::Result<Str
         );
 
         if line.ends_with(&[b'\n']) {
-            return Ok(String::from_utf8(line)?)
+            return Ok(String::from_utf8(line)?.trim_end().to_string());
         }
     }
 }
