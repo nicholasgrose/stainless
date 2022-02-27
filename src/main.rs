@@ -4,9 +4,9 @@ use reqwest::Client;
 
 use crate::papermc::{PaperMCServer, PaperMCServerApp};
 
+mod config;
 mod papermc;
 mod server;
-mod config;
 
 type Result<T> = std::result::Result<T, Error>;
 
@@ -17,7 +17,10 @@ async fn main() {
     let stainless_config = match config::load_stainless_config(&http_client).await {
         Ok(config) => config,
         Err(e) => {
-            println!("{} Error occurred while loading Stainless configuration: {}", CROSS_MARK.glyph, e);
+            println!(
+                "{} Error occurred while loading Stainless configuration: {}",
+                CROSS_MARK.glyph, e
+            );
             return;
         }
     };

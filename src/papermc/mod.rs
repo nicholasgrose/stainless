@@ -40,9 +40,14 @@ impl Server<PaperMCServer, PaperMCServerApp> for PaperMCServer {
         let saved_client_path = Path::new(&client_info_path);
         let mut saved_client_file = File::open(saved_client_path)?;
         let save_config = bincode::config::standard().write_fixed_array_length();
-        let saved_client: PaperMCServerApp = bincode::serde::decode_from_std_read(&mut saved_client_file, save_config)?;
+        let saved_client: PaperMCServerApp =
+            bincode::serde::decode_from_std_read(&mut saved_client_file, save_config)?;
 
-        println!("{} Found existing server: {}", CHECK_MARK.glyph, saved_client.application_name());
+        println!(
+            "{} Found existing server: {}",
+            CHECK_MARK.glyph,
+            saved_client.application_name()
+        );
 
         Ok(saved_client)
     }
@@ -77,7 +82,11 @@ pub struct PaperMCServerApp {
 
 impl Display for PaperMCServerApp {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{{Project: {}, Build: {}, Download: {}}}", self.project, self.build, self.application_download)
+        write!(
+            f,
+            "{{Project: {}, Build: {}, Download: {}}}",
+            self.project, self.build, self.application_download
+        )
     }
 }
 
@@ -87,12 +96,19 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
         &self.application_download.name
     }
 
-    async fn check_for_updated_server(&self, _config: &PaperMCServer, http_client: &Client) -> crate::Result<Option<PaperMCServerApp>> {
-        let latest_client = query::latest_papermc_server_for_project(&self.project, http_client)
-            .await?;
+    async fn check_for_updated_server(
+        &self,
+        _config: &PaperMCServer,
+        http_client: &Client,
+    ) -> crate::Result<Option<PaperMCServerApp>> {
+        let latest_client =
+            query::latest_papermc_server_for_project(&self.project, http_client).await?;
 
         if latest_client.build > self.build {
-            println!("{} Newer server build is available: {}", CHECK_MARK.glyph, latest_client.build);
+            println!(
+                "{} Newer server build is available: {}",
+                CHECK_MARK.glyph, latest_client.build
+            );
             Ok(Some(latest_client))
         } else {
             println!("{} No newer server is available!", CHECK_MARK.glyph);
@@ -101,17 +117,22 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
     }
 
     async fn download_server(&self, http_client: &Client) -> crate::Result<()> {
-        println!("{} Downloading {}...", INFORMATION.glyph, self.application_name());
+        println!(
+            "{} Downloading {}...",
+            INFORMATION.glyph,
+            self.application_name()
+        );
 
-        query::download_server_application(
-            self,
-            Path::new(&self.application_name()),
-            http_client,
-        ).await
+        query::download_server_application(self, Path::new(&self.application_name()), http_client)
+            .await
     }
 
     fn delete_server(&self) -> crate::Result<()> {
-        println!("{} Removing {}...", INFORMATION.glyph, self.application_name());
+        println!(
+            "{} Removing {}...",
+            INFORMATION.glyph,
+            self.application_name()
+        );
 
         remove_file(Path::new(&self.application_name()))?;
 
@@ -132,8 +153,16 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
         Ok(())
     }
 
-    async fn start_server(&self, server_config: &PaperMCServer, input_receiver: &mut Receiver<u8>) -> crate::Result<ExitStatus> {
-        println!("{} Starting {}...", INFORMATION.glyph, self.application_name());
+    async fn start_server(
+        &self,
+        server_config: &PaperMCServer,
+        input_receiver: &mut Receiver<u8>,
+    ) -> crate::Result<ExitStatus> {
+        println!(
+            "{} Starting {}...",
+            INFORMATION.glyph,
+            self.application_name()
+        );
 
         let mut server_process = Command::new("java")
             .arg("-jar")
@@ -179,7 +208,7 @@ impl PaperMCServerApp {
             build: -1,
             application_download: Download {
                 name: String::from(""),
-                sha256: vec!(),
+                sha256: vec![],
             },
         }
     }
@@ -193,6 +222,11 @@ pub struct Download {
 
 impl Display for Download {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{{Name: {}, SHA256: {}}}", self.name, hex::encode(&self.sha256))
+        write!(
+            f,
+            "{{Name: {}, SHA256: {}}}",
+            self.name,
+            hex::encode(&self.sha256)
+        )
     }
 }

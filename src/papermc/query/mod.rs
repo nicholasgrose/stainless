@@ -10,14 +10,20 @@ use sha2::{Digest, Sha256};
 
 use crate::config::constants::DOWNLOAD_PROGRESS_BAR_TEMPLATE;
 use crate::papermc::{Download, PaperMCProject, PaperMCServerApp};
-use crate::papermc::query::response_schema::{BuildResponse, Download as SchemaDownload, VersionResponse};
+use crate::papermc::query::response_schema::{
+    BuildResponse, Download as SchemaDownload, VersionResponse,
+};
 
-mod url;
 mod response_schema;
+mod url;
 
-pub async fn latest_papermc_server_for_project(project: &PaperMCProject, http_client: &Client) -> crate::Result<PaperMCServerApp> {
+pub async fn latest_papermc_server_for_project(
+    project: &PaperMCProject,
+    http_client: &Client,
+) -> crate::Result<PaperMCServerApp> {
     let latest_build = latest_project_build(project, http_client).await?;
-    let application_download = application_build_download(project, latest_build, http_client).await?;
+    let application_download =
+        application_build_download(project, latest_build, http_client).await?;
 
     Ok(PaperMCServerApp {
         project: project.clone(),
@@ -29,19 +35,26 @@ pub async fn latest_papermc_server_for_project(project: &PaperMCProject, http_cl
     })
 }
 
-async fn application_build_download(project: &PaperMCProject, latest_build: i32, http_client: &Client) -> crate::Result<SchemaDownload> {
-    let build_response = call_papermc_project_build_api(project, latest_build, http_client)
-        .await?;
+async fn application_build_download(
+    project: &PaperMCProject,
+    latest_build: i32,
+    http_client: &Client,
+) -> crate::Result<SchemaDownload> {
+    let build_response = call_papermc_project_build_api(project, latest_build, http_client).await?;
 
     match build_response.application_download() {
         Some(download) => Ok(download.clone()),
-        None => Err(Error::msg("no server application downloads found for latest build of project")),
+        None => Err(Error::msg(
+            "no server application downloads found for latest build of project",
+        )),
     }
 }
 
-async fn latest_project_build(project: &PaperMCProject, http_client: &Client) -> crate::Result<i32> {
-    let build_response = call_papermc_project_version_api(project, http_client)
-        .await?;
+async fn latest_project_build(
+    project: &PaperMCProject,
+    http_client: &Client,
+) -> crate::Result<i32> {
+    let build_response = call_papermc_project_version_api(project, http_client).await?;
 
     match build_response.most_recent_build() {
         Some(build) => Ok(*build),
@@ -49,29 +62,38 @@ async fn latest_project_build(project: &PaperMCProject, http_client: &Client) ->
     }
 }
 
-async fn call_papermc_project_version_api(project: &PaperMCProject, http_client: &Client) -> crate::Result<VersionResponse> {
+async fn call_papermc_project_version_api(
+    project: &PaperMCProject,
+    http_client: &Client,
+) -> crate::Result<VersionResponse> {
     Ok(http_client
         .get(url::papermc_project_version_url(project))
         .send()
         .await?
         .error_for_status()?
         .json::<VersionResponse>()
-        .await?
-    )
+        .await?)
 }
 
-async fn call_papermc_project_build_api(project: &PaperMCProject, build: i32, http_client: &Client) -> crate::Result<BuildResponse> {
+async fn call_papermc_project_build_api(
+    project: &PaperMCProject,
+    build: i32,
+    http_client: &Client,
+) -> crate::Result<BuildResponse> {
     Ok(http_client
         .get(url::papermc_project_build_url(project, build))
         .send()
         .await?
         .error_for_status()?
         .json::<BuildResponse>()
-        .await?
-    )
+        .await?)
 }
 
-pub async fn download_server_application(project: &PaperMCServerApp, client_file_path: &Path, http_client: &Client) -> crate::Result<()> {
+pub async fn download_server_application(
+    project: &PaperMCServerApp,
+    client_file_path: &Path,
+    http_client: &Client,
+) -> crate::Result<()> {
     let mut response = http_client
         .get(url::papermc_project_download_url(project))
         .send()
@@ -83,10 +105,7 @@ pub async fn download_server_application(project: &PaperMCServerApp, client_file
         None => return Err(Error::msg("no content delivered for download")),
     };
     let progress_bar = ProgressBar::new(content_length);
-    progress_bar.set_style(
-        ProgressStyle::default_bar()
-            .template(DOWNLOAD_PROGRESS_BAR_TEMPLATE)?
-    );
+    progress_bar.set_style(ProgressStyle::default_bar().template(DOWNLOAD_PROGRESS_BAR_TEMPLATE)?);
     let mut client_file = File::create(client_file_path)?;
     let mut hasher = Sha256::default();
 
