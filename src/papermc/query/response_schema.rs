@@ -36,7 +36,7 @@ pub struct BuildResponse {
 
 impl BuildResponse {
     pub fn application_download(&self) -> Option<&Download> {
-        return self.downloads.get(PAPERMC_DOWNLOAD_TYPE_NAME);
+        self.downloads.get(PAPERMC_DOWNLOAD_TYPE_NAME)
     }
 }
 
