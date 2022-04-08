@@ -1,5 +1,6 @@
 use actix_cors::Cors;
-use actix_web::{App, http::header, HttpServer, middleware, web::Data};
+use actix_web::{App, http::header, HttpServer, web::Data};
+use actix_web::middleware::Compress;
 use tracing_actix_web::TracingLogger;
 
 mod database;
@@ -20,13 +21,12 @@ async fn main() -> std::io::Result<()> {
                     .supports_credentials()
                     .max_age(3600),
             )
-            .wrap(middleware::Compress::default())
+            .wrap(Compress::default())
             .wrap(TracingLogger::default())
             .service(routes::graphql)
             .service(routes::graphiql)
             .service(routes::playground)
     });
-    server.bind("127.0.0.1:8080").unwrap().run().await
+
+    server.bind("0.0.0.0:8080")?.run().await
 }
-// now go to http://127.0.0.1:8080/playground or graphiql and execute
-//{  apiVersion,  user(id: 2){id, name}}

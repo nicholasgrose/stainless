@@ -4,15 +4,11 @@ use crate::database;
 use crate::database::Database;
 
 #[derive(Clone, GraphQLObject)]
-///a user
 pub struct User {
-    ///the id
     pub id: i32,
-    ///the name
     pub name: String,
 }
 
-// Queries represent the callable functions
 pub struct Query;
 
 #[graphql_object(context = Database)]

@@ -4,7 +4,6 @@ use crate::schema::User;
 
 #[derive(Default, Clone)]
 pub struct Database {
-    ///this could be a database connection
     users: HashMap<i32, User>,
 }
 
@@ -47,5 +46,4 @@ impl Database {
     }
 }
 
-// To make our Database usable by Juniper, we have to implement a marker trait.
 impl juniper::Context for Database {}
