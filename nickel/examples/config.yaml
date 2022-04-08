@@ -3,5 +3,5 @@ server:
     server_name: TestServer
     project:
       name: paper
-      version: 1.18.1
+      version: 1.18.2
     jvm_arguments: [ ]

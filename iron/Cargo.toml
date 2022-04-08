@@ -6,3 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix = "0.13.0"
+actix-cors = "0.6.1"
+actix-web = "4.0.1"
+anyhow = "1.0.56"
+diesel = "1.4.8"
+juniper = "0.15.9"
+juniper_actix = "0.4.0"
+tokio = "1.17.0"
+tracing = "0.1.32"
+tracing-actix-web = "0.5.1"

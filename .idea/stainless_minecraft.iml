@@ -2,11 +2,17 @@
 <module type="CPP_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/iron/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/nickel/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/nickel/examples" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/run" />
       <excludeFolder url="file://$MODULE_DIR$/.history" />
+      <excludeFolder url="file://$MODULE_DIR$/iron/target" />
+      <excludeFolder url="file://$MODULE_DIR$/nickel/target" />
+      <excludeFolder url="file://$MODULE_DIR$/iron/run" />
+      <excludeFolder url="file://$MODULE_DIR$/nickel/run" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

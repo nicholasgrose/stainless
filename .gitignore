@@ -91,7 +91,7 @@ Cargo.lock
 **/*.rs.bk
 
 # Ignoring run/ so that the server can be downloaded somewhere for testing
-run/
+*/run/
 
 ### VisualStudioCode template
 .vscode/*
