@@ -5,12 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
+            "type": "cppvsdbg",
             "request": "launch",
-            "name": "Debug",
-            "program": "${workspaceFolder}/<your program>",
+            "name": "Debug Iron",
+            "program": "${workspaceFolder}/iron/target/debug/iron.exe",
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/iron/run",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "stainless: build iron"
+        },
+        {
+            "type": "cppvsdbg",
+            "request": "launch",
+            "name": "Debug Nickel",
+            "program": "${workspaceFolder}/nickel/target/debug/nickel.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/nickel/run",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "stainless: build nickel"
         }
     ]
 }

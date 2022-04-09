@@ -1,24 +1,24 @@
 {
-  "cSpell.words": [
-    "actix",
-    "alphanum",
-    "graphiql",
-    "indicatif",
-    "papermc",
-    "reqwest"
-  ],
-  "files.exclude": {
-    "**/.git": true,
-    "**/.svn": true,
-    "**/.hg": true,
-    "**/CVS": true,
-    "**/.DS_Store": true,
-    "**/Thumbs.db": true,
-    "**/.classpath": true,
-    "**/.project": true,
-    "**/.settings": true,
-    "**/.factorypath": true,
-    "**/.history": true
-  },
-  "explorerExclude.backup": null
+    "cSpell.words": [
+        "actix",
+        "alphanum",
+        "graphiql",
+        "indicatif",
+        "papermc",
+        "reqwest"
+    ],
+    "explorerExclude.backup": {},
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true,
+        "**/.history": true
+    }
 }

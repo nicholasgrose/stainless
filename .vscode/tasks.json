@@ -1,0 +1,83 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "stainless: run iron",
+            "type": "shell",
+            "command": "cargo run --package iron --bin iron",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/iron/run"
+            }
+        },
+        {
+            "label": "stainless: run nickel",
+            "type": "shell",
+            "command": "cargo run --package nickel --bin nickel",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/nickel/run"
+            }
+        },
+        {
+            "label": "stainless: build iron",
+            "type": "shell",
+            "command": "cargo build --package iron --bin iron",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/iron"
+            }
+        },
+        {
+            "label": "stainless: build nickel",
+            "type": "shell",
+            "command": "cargo build --package nickel --bin nickel",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/nickel"
+            }
+        },
+        {
+            "label": "stainless: update iron",
+            "type": "shell",
+            "command": "cargo update",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/iron"
+            }
+        },
+        {
+            "label": "stainless: update nickel",
+            "type": "shell",
+            "command": "cargo update",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/nickel"
+            }
+        },
+        {
+            "label": "stainless: upgrade iron",
+            "type": "shell",
+            "command": "cargo upgrade --to-lockfile",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/iron"
+            },
+            "dependsOn": [
+                "stainless: update iron"
+            ]
+        },
+        {
+            "label": "stainless: upgrade nickel",
+            "type": "shell",
+            "command": "cargo upgrade --to-lockfile",
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/nickel"
+            },
+            "dependsOn": [
+                "stainless: update nickel"
+            ]
+        }
+    ]
+}
