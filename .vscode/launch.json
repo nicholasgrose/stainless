@@ -1,42 +1,16 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "lldb",
-      "request": "launch",
-      "name": "Debug executable 'stainless_minecraft'",
-      "cargo": {
-        "args": [
-          "build",
-          "--bin=stainless_minecraft",
-          "--package=stainless_minecraft"
-        ],
-        "filter": {
-          "name": "stainless_minecraft",
-          "kind": "bin"
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceFolder}/<your program>",
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
-      },
-      "args": [],
-      "cwd": "${workspaceFolder}/run"
-    },
-    {
-      "type": "lldb",
-      "request": "launch",
-      "name": "Debug unit tests in executable 'stainless_minecraft'",
-      "cargo": {
-        "args": [
-          "test",
-          "--no-run",
-          "--bin=stainless_minecraft",
-          "--package=stainless_minecraft"
-        ],
-        "filter": {
-          "name": "stainless_minecraft",
-          "kind": "bin"
-        }
-      },
-      "args": [],
-      "cwd": "${workspaceFolder}/run"
-    }
-  ]
+    ]
 }

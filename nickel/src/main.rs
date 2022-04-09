@@ -1,4 +1,6 @@
 use anyhow::Error;
+use emoji::symbols::other_symbol::CROSS_MARK;
+use reqwest::Client;
 
 use crate::papermc::{PaperMCServer, PaperMCServerApp};
 
