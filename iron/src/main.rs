@@ -1,11 +1,11 @@
 use actix_cors::Cors;
-use actix_web::{App, http::header, HttpServer, web::Data};
 use actix_web::middleware::Compress;
+use actix_web::{http::header, web::Data, App, HttpServer};
 use tracing_actix_web::TracingLogger;
 
 mod database;
-mod schema;
 mod routes;
+mod schema;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

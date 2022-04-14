@@ -1,4 +1,4 @@
-use juniper::{EmptyMutation, EmptySubscription, graphql_object, GraphQLObject, RootNode};
+use juniper::{graphql_object, EmptyMutation, EmptySubscription, GraphQLObject, RootNode};
 
 use crate::database;
 use crate::database::Database;
@@ -25,11 +25,8 @@ impl Query {
     }
 }
 
-pub type Schema = RootNode<'static,
-    Query,
-    EmptyMutation<database::Database>,
-    EmptySubscription<Database>
->;
+pub type Schema =
+    RootNode<'static, Query, EmptyMutation<database::Database>, EmptySubscription<Database>>;
 
 pub fn new() -> Schema {
     Schema::new(

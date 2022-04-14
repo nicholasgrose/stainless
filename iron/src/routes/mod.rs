@@ -1,4 +1,8 @@
-use actix_web::{Error, get, HttpRequest, HttpResponse, route, web::{Data, Payload}};
+use actix_web::{
+    get, route,
+    web::{Data, Payload},
+    Error, HttpRequest, HttpResponse,
+};
 use juniper_actix::{graphiql_handler, graphql_handler, playground_handler};
 
 use database::Database;

@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use std::fs::{File, remove_file};
+use std::fs::{remove_file, File};
 use std::path::Path;
 use std::process::{ExitStatus, Stdio};
 
@@ -9,10 +9,10 @@ use emoji::symbols::alphanum::INFORMATION;
 use emoji::symbols::other_symbol::{CHECK_MARK, CROSS_MARK};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use tokio::{pin, select};
 use tokio::io::AsyncWriteExt;
 use tokio::process::Command;
 use tokio::sync::mpsc::Receiver;
+use tokio::{pin, select};
 
 use crate::config::constants::SERVER_INFO_DIR_PATH;
 use crate::server::{Server, ServerApplication};

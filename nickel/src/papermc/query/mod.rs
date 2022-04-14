@@ -9,10 +9,10 @@ use reqwest::Client;
 use sha2::{Digest, Sha256};
 
 use crate::config::constants::DOWNLOAD_PROGRESS_BAR_TEMPLATE;
-use crate::papermc::{Download, PaperMCProject, PaperMCServerApp};
 use crate::papermc::query::response_schema::{
     BuildResponse, Download as SchemaDownload, VersionResponse,
 };
+use crate::papermc::{Download, PaperMCProject, PaperMCServerApp};
 
 mod response_schema;
 mod url;
