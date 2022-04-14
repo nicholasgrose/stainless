@@ -9,7 +9,7 @@ edition = "2021"
 anyhow = "1.0.56"
 async-trait = "0.1.53"
 bincode = { version = "2.0.0-rc.1", features = ["serde"] }
-config = "0.13.0"
+config = "0.13.1"
 emoji = "0.2.1"
 hex = "0.4.3"
 indicatif = "0.17.0-rc.10"
