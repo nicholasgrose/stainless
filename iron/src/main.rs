@@ -1,6 +1,6 @@
 use actix_cors::Cors;
 use actix_web::middleware::Compress;
-use actix_web::{http::header, web::Data, App, HttpServer};
+use actix_web::{http::{header, Method}, web::Data, App, HttpServer};
 use tracing_actix_web::TracingLogger;
 
 mod database;
@@ -15,7 +15,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(
                 Cors::default()
                     .allow_any_origin()
-                    .allowed_methods(vec!["POST", "GET"])
+                    .allowed_methods(vec![Method::POST.as_str(), Method::GET.as_str()])
                     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
                     .allowed_header(header::CONTENT_TYPE)
                     .supports_credentials()
