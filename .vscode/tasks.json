@@ -13,37 +13,53 @@
             "label": "stainless: run iron",
             "type": "shell",
             "command": "cargo run --package iron --bin iron",
-            "problemMatcher": [],
+            "problemMatcher": [
+                "$rustc"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}/iron/run"
-            }
+            },
+            "detail": "Runs a debug version of iron.",
+            "group": "build"
         },
         {
             "label": "stainless: run nickel",
             "type": "shell",
             "command": "cargo run --package nickel --bin nickel",
-            "problemMatcher": [],
+            "problemMatcher": [
+                "$rustc"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}/nickel/run"
-            }
+            },
+            "detail": "Runs a debug version of nickel.",
+            "group": "build"
         },
         {
             "label": "stainless: build iron",
             "type": "shell",
             "command": "cargo build --package iron --bin iron",
-            "problemMatcher": [],
+            "problemMatcher": [
+                "$rustc"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}/iron"
-            }
+            },
+            "detail": "Builds a debug version of iron.",
+            "group": "build"
         },
         {
             "label": "stainless: build nickel",
             "type": "shell",
             "command": "cargo build --package nickel --bin nickel",
-            "problemMatcher": [],
+            "problemMatcher": [
+                "$rustc"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}/nickel"
-            }
+            },
+            "detail": "Builds a debug version of nickel.",
+            "group": "build"
         },
         {
             "label": "stainless: update iron",
@@ -52,7 +68,9 @@
             "problemMatcher": [],
             "options": {
                 "cwd": "${workspaceFolder}/iron"
-            }
+            },
+            "detail": "Updates all dependencies of iron in Cargo.lock.",
+            "group": "none"
         },
         {
             "label": "stainless: update nickel",
@@ -61,7 +79,9 @@
             "problemMatcher": [],
             "options": {
                 "cwd": "${workspaceFolder}/nickel"
-            }
+            },
+            "detail": "Updates all dependencies of nickel in Cargo.lock.",
+            "group": "none"
         },
         {
             "label": "stainless: upgrade iron",
@@ -73,7 +93,10 @@
             },
             "dependsOn": [
                 "stainless: update iron"
-            ]
+            ],
+            "dependsOrder": "sequence",
+            "detail": "Upgrades all dependencies of iron in Cargo.toml.",
+            "group": "none"
         },
         {
             "label": "stainless: upgrade nickel",
@@ -85,7 +108,84 @@
             },
             "dependsOn": [
                 "stainless: update nickel"
-            ]
-        }
+            ],
+            "dependsOrder": "sequence",
+            "detail": "Upgrades all dependencies of nickel in Cargo.toml.",
+            "group": "none"
+        },
+        {
+            "label": "stainless: upgrade all",
+            "problemMatcher": [],
+            "dependsOn": [
+                "stainless: upgrade nickel",
+                "stainless: upgrade iron"
+            ],
+            "detail": "Upgrades all dependencies in all Cargo.toml files.",
+            "group": "none"
+        },
+        {
+            "label": "stainless: format iron",
+            "type": "shell",
+            "command": "cargo fmt --all",
+            "options": {
+                "cwd": "${workspaceFolder}/iron"
+            },
+            "detail": "Formats iron.",
+            "group": "none"
+        },
+        {
+            "label": "stainless: format nickel",
+            "type": "shell",
+            "command": "cargo fmt --all",
+            "options": {
+                "cwd": "${workspaceFolder}/nickel"
+            },
+            "detail": "Formats nickel.",
+            "group": "none"
+        },
+        {
+            "label": "stainless: check iron",
+            "type": "shell",
+            "command": "cargo clippy",
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/iron"
+            },
+            "dependsOn": [
+                "stainless: format iron"
+            ],
+            "dependsOrder": "sequence",
+            "detail": "Lints iron.",
+            "group": "none"
+        },
+        {
+            "label": "stainless: check nickel",
+            "type": "shell",
+            "command": "cargo clippy",
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/nickel"
+            },
+            "dependsOn": [
+                "stainless: format nickel"
+            ],
+            "dependsOrder": "sequence",
+            "detail": "Lints nickel.",
+            "group": "none"
+        },
+        {
+            "label": "stainless: check all",
+            "problemMatcher": [],
+            "dependsOn": [
+                "stainless: check nickel",
+                "stainless: check iron"
+            ],
+            "detail": "Lints all packages.",
+            "group": "none"
+        },
     ]
 }
