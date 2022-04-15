@@ -15,7 +15,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(
                 Cors::default()
                     .allow_any_origin()
-                    .allowed_methods(vec![Method::POST.as_str(), Method::GET.as_str()])
+                    .allowed_methods(vec![Method::POST, Method::GET])
                     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
                     .allowed_header(header::CONTENT_TYPE)
                     .supports_credentials()
