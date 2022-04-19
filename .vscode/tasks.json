@@ -62,6 +62,16 @@
             "group": "build"
         },
         {
+            "label": "stainless: build all",
+            "problemMatcher": [],
+            "dependsOn": [
+                "stainless: build iron",
+                "stainless: build nickel"
+            ],
+            "detail": "Builds all packages.",
+            "group": "build"
+        },
+        {
             "label": "stainless: update iron",
             "type": "shell",
             "command": "cargo update",

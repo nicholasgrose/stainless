@@ -1,6 +1,10 @@
 use actix_cors::Cors;
 use actix_web::middleware::Compress;
-use actix_web::{http::{header, Method}, web::Data, App, HttpServer};
+use actix_web::{
+    http::{header, Method},
+    web::Data,
+    App, HttpServer,
+};
 use tracing_actix_web::TracingLogger;
 
 mod database;
