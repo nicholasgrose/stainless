@@ -21,7 +21,5 @@
         "**/.factorypath": true,
         "**/.history": true
     },
-    "rust-analyzer.checkOnSave.command": "clippy",
-    "rust-analyzer.inlayHints.maxLength": 10,
-    "rust-analyzer.joinLines.joinAssignments": false
+    "rust-analyzer.checkOnSave.command": "clippy"
 }
