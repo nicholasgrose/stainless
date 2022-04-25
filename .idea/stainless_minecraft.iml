@@ -6,6 +6,9 @@
       <sourceFolder url="file://$MODULE_DIR$/iron/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/nickel/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/nickel/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/iron/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/nickel/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/nickel/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/run" />
       <excludeFolder url="file://$MODULE_DIR$/.history" />
