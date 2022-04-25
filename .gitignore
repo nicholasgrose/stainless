@@ -102,4 +102,4 @@ Cargo.lock
 .history/
 
 # Ignoring run/ so that the server can be downloaded somewhere for testing
-*/run/
+run/

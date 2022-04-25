@@ -14,7 +14,7 @@ pub struct Query;
 #[graphql_object(context = Database)]
 impl Query {
     fn api_version() -> &'static str {
-        "1.0"
+        "0.1"
     }
 
     fn user(
