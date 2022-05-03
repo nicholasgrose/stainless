@@ -5,7 +5,11 @@
         "graphiql",
         "indicatif",
         "papermc",
-        "reqwest"
+        "pemfile",
+        "pkcs",
+        "reqwest",
+        "rustls",
+        "thiserror"
     ],
     "explorerExclude.backup": {},
     "files.exclude": {

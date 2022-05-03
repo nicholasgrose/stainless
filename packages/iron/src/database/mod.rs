@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::schema::User;
+use velcro::hash_map;
+
+use crate::web::schema::User;
 
 #[derive(Default, Clone)]
 pub struct Database {
@@ -9,36 +11,26 @@ pub struct Database {
 
 impl Database {
     pub fn new() -> Database {
-        let mut users = HashMap::new();
-        users.insert(
-            1,
-            User {
-                id: 1,
-                name: "Aron".to_string(),
+        Database {
+            users: hash_map! {
+                1: User {
+                    id: 1,
+                    name: "Aron".to_string(),
+                },
+                2: User {
+                    id: 2,
+                    name: "Bea".to_string(),
+                },
+                3: User {
+                    id: 3,
+                    name: "Carl".to_string(),
+                },
+                4: User {
+                    id: 4,
+                    name: "Dora".to_string(),
+                },
             },
-        );
-        users.insert(
-            2,
-            User {
-                id: 2,
-                name: "Bea".to_string(),
-            },
-        );
-        users.insert(
-            3,
-            User {
-                id: 3,
-                name: "Carl".to_string(),
-            },
-        );
-        users.insert(
-            4,
-            User {
-                id: 4,
-                name: "Dora".to_string(),
-            },
-        );
-        Database { users }
+        }
     }
 
     pub fn get_user(&self, id: &i32) -> Option<&User> {
