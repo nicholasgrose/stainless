@@ -12,17 +12,17 @@ pub async fn graphql(
     req: HttpRequest,
     payload: Payload,
     schema: Data<Schema>,
-) -> crate::Result<HttpResponse> {
+) -> actix_web::Result<HttpResponse> {
     let context = Database::new();
-    Ok(graphql_handler(&schema, &context, req, payload).await?)
+    graphql_handler(&schema, &context, req, payload).await
 }
 
 #[get("/graphiql")]
-pub async fn graphiql() -> crate::Result<HttpResponse> {
-    Ok(graphiql_handler("/graphql", None).await?)
+pub async fn graphiql() -> actix_web::Result<HttpResponse> {
+    graphiql_handler("/graphql", None).await
 }
 
 #[get("/playground")]
-pub async fn playground() -> crate::Result<HttpResponse> {
-    Ok(playground_handler("/graphql", None).await?)
+pub async fn playground() -> actix_web::Result<HttpResponse> {
+    playground_handler("/graphql", None).await
 }
