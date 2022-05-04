@@ -1,3 +1,5 @@
+#![feature(backtrace)]
+
 use error::IronError;
 use web::start_server;
 
