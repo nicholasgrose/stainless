@@ -27,9 +27,7 @@ pub fn start_server(address: &str) -> crate::Result<Server> {
             )
             .wrap(Compress::default())
             .wrap(TracingLogger::default())
-            .service(routes::graphql)
-            .service(routes::graphiql)
-            .service(routes::playground)
+            .service(routes::all())
     });
     let tls_config = tls::load_tls_config()?;
 

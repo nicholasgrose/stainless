@@ -1,5 +1,6 @@
 use actix_web::{
-    get, route,
+    dev::HttpServiceFactory,
+    get, route, services,
     web::{Data, Payload},
     HttpRequest, HttpResponse,
 };
@@ -25,4 +26,8 @@ pub async fn graphiql() -> actix_web::Result<HttpResponse> {
 #[get("/playground")]
 pub async fn playground() -> actix_web::Result<HttpResponse> {
     playground_handler("/graphql", None).await
+}
+
+pub fn all() -> impl HttpServiceFactory {
+    services![graphql, graphiql, playground]
 }
