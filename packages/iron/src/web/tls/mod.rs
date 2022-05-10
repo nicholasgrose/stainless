@@ -5,8 +5,8 @@ use rustls::{Certificate, PrivateKey, ServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 
 pub fn load_tls_config() -> crate::Result<ServerConfig> {
-    let certificates = load_certificates("cert.pem")?;
-    let private_key = load_private_key("key.pem")?;
+    let certificates = load_certificates("cert.pem").context("can't load certificate file")?;
+    let private_key = load_private_key("key.pem").context("can't load private key file")?;
 
     Ok(ServerConfig::builder()
         .with_safe_defaults()
@@ -35,7 +35,7 @@ fn load_private_key(path: &str) -> crate::Result<PrivateKey> {
     let mut private_keys = pkcs8_private_keys(&mut key_file)?;
 
     if private_keys.get(0).is_none() {
-        Err(anyhow!("No private key found!").into())
+        Err(anyhow!("no private key found").into())
     } else {
         Ok(PrivateKey(private_keys.swap_remove(0)))
     }
