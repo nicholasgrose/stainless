@@ -3,6 +3,7 @@
 use error::IronError;
 use web::start_server;
 
+mod config;
 mod database;
 mod error;
 mod web;

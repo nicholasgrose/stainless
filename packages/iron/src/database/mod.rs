@@ -2,39 +2,48 @@ use std::collections::HashMap;
 
 use velcro::hash_map;
 
-use crate::web::schema::User;
+use crate::config::{
+    minecraft::{papermc::PaperMC, Minecraft, MinecraftServer},
+    Game, ServerConfig,
+};
 
 #[derive(Default, Clone)]
 pub struct Database {
-    users: HashMap<i32, User>,
+    servers: HashMap<String, ServerConfig>,
 }
 
 impl Database {
     pub fn new() -> Database {
         Database {
-            users: hash_map! {
-                1: User {
-                    id: 1,
-                    name: "Aron".to_string(),
+            servers: hash_map! {
+                "test".to_string(): ServerConfig {
+                    name: "test".to_string(),
+                    app: Game::Minecraft( Minecraft {
+                        jvm_runtime_arguments: vec!["-Xmx:4G".to_string()],
+                        game_version: "1.18.2".to_string(),
+                        server: MinecraftServer::PaperMC(PaperMC {
+                            project: "Paper".to_string(),
+                            build: 69
+                        })
+                    })
                 },
-                2: User {
-                    id: 2,
-                    name: "Bea".to_string(),
-                },
-                3: User {
-                    id: 3,
-                    name: "Carl".to_string(),
-                },
-                4: User {
-                    id: 4,
-                    name: "Dora".to_string(),
-                },
+                "test1".to_string(): ServerConfig {
+                    name: "test1".to_string(),
+                    app: Game::Minecraft(Minecraft {
+                        jvm_runtime_arguments: vec!["-Xmx:2G".to_string()],
+                        game_version: "1.16.5".to_string(),
+                        server: MinecraftServer::PaperMC(PaperMC {
+                            project: "Paper".to_string(),
+                            build: 68
+                        })
+                    })
+                }
             },
         }
     }
 
-    pub fn get_user(&self, id: &i32) -> Option<&User> {
-        self.users.get(id)
+    pub fn get_server(&self, name: &str) -> Option<&ServerConfig> {
+        self.servers.get(name)
     }
 }
 

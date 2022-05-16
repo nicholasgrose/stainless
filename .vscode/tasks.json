@@ -172,7 +172,7 @@
             "type": "shell",
             "command": "cargo fmt --all",
             "problemMatcher": [],
-            "detail": "Formats nickel.",
+            "detail": "Formats all packages.",
             "group": "none"
         },
         {
@@ -189,5 +189,32 @@
             "detail": "Lints all packages.",
             "group": "none"
         },
+        {
+            "label": "stainless: clean iron",
+            "type": "shell",
+            "command": "cargo clean --package iron",
+            "problemMatcher": [
+            ],
+            "detail": "Cleans iron files.",
+            "group": "none"
+        },
+        {
+            "label": "stainless: clean nickel",
+            "type": "shell",
+            "command": "cargo clean --package nickel",
+            "problemMatcher": [
+            ],
+            "detail": "Cleans nickel files.",
+            "group": "none"
+        },
+        {
+            "label": "stainless: clean all",
+            "type": "shell",
+            "command": "cargo clean",
+            "problemMatcher": [
+            ],
+            "detail": "Cleans all packages.",
+            "group": "none"
+        }
     ]
 }

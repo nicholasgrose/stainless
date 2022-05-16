@@ -1,13 +1,7 @@
-use juniper::{graphql_object, EmptyMutation, EmptySubscription, GraphQLObject, RootNode};
-
+use crate::config::ServerConfig;
 use crate::database;
 use crate::database::Database;
-
-#[derive(Clone, GraphQLObject)]
-pub struct User {
-    pub id: i32,
-    pub name: String,
-}
+use juniper::{graphql_object, EmptyMutation, EmptySubscription, RootNode};
 
 pub struct Query;
 
@@ -17,11 +11,11 @@ impl Query {
         "0.1"
     }
 
-    fn user(
+    fn server_config(
         context: &Database,
-        #[graphql(description = "id of the user")] id: i32,
-    ) -> Option<&User> {
-        context.get_user(&id)
+        #[graphql(description = "name of the server")] name: String,
+    ) -> Option<&ServerConfig> {
+        context.get_server(&name)
     }
 }
 
