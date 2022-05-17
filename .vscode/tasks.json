@@ -64,6 +64,34 @@
             "group": "build"
         },
         {
+            "label": "stainless: build iron release",
+            "type": "shell",
+            "command": "cargo build --package iron --bin iron --release",
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "detail": "Builds a debug version of iron.",
+            "group": "build"
+        },
+        {
+            "label": "stainless: build nickel release",
+            "type": "shell",
+            "command": "cargo build --package nickel --bin nickel --release",
+            "problemMatcher": [
+                "$rustc"
+            ],
+            "detail": "Builds a debug version of nickel.",
+            "group": "build"
+        },
+        {
+            "label": "stainless: build all release",
+            "type": "shell",
+            "command": "cargo build --all --release",
+            "problemMatcher": [],
+            "detail": "Builds debug versions of all packages.",
+            "group": "build"
+        },
+        {
             "label": "stainless: update iron",
             "type": "shell",
             "command": "cargo update --package iron",
