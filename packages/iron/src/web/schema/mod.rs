@@ -1,7 +1,6 @@
-use crate::config::ServerConfig;
-use crate::database;
-use crate::database::Database;
 use juniper::{graphql_object, EmptyMutation, EmptySubscription, RootNode};
+
+use crate::{database::Database, shared::config::ServerConfig};
 
 pub struct Query;
 
@@ -20,7 +19,7 @@ impl Query {
 }
 
 pub type Schema =
-    RootNode<'static, Query, EmptyMutation<database::Database>, EmptySubscription<Database>>;
+    RootNode<'static, Query, EmptyMutation<Database>, EmptySubscription<Database>>;
 
 pub fn new() -> Schema {
     Schema::new(

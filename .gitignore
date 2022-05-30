@@ -101,5 +101,8 @@ Cargo.lock
 # Local History for Visual Studio Code
 .history/
 
+# Removing log for new relic
+newrelic_agent.log
+
 # Ignoring run/ so that the server can be downloaded somewhere for testing
 run/

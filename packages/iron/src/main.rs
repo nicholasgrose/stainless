@@ -3,10 +3,10 @@
 use error::IronError;
 use web::start_server;
 
-mod config;
 mod database;
 mod error;
 mod web;
+mod shared;
 
 type Result<T> = anyhow::Result<T, IronError>;
 

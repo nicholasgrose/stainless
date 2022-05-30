@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use velcro::hash_map;
 
-use crate::config::{
+use crate::shared::config::{
     minecraft::{papermc::PaperMC, Minecraft, MinecraftServer},
     Game, ServerConfig,
 };
