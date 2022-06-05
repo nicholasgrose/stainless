@@ -4,6 +4,7 @@
         "alphanum",
         "graphiql",
         "indicatif",
+        "Insertable",
         "minecraft",
         "papermc",
         "pemfile",

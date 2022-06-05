@@ -6,16 +6,16 @@ use actix_web::{
 };
 use juniper_actix::{graphiql_handler, graphql_handler, playground_handler};
 
-use crate::{database::Database, web::schema::Schema};
+use crate::{database::DatabaseContext, web::schema::Schema};
 
 #[route("/graphql", method = "GET", method = "POST")]
-pub async fn graphql(
+pub async fn graphql<'a>(
     req: HttpRequest,
     payload: Payload,
     schema: Data<Schema>,
+    database_context: Data<DatabaseContext>,
 ) -> actix_web::Result<HttpResponse> {
-    let context = Database::new();
-    graphql_handler(&schema, &context, req, payload).await
+    graphql_handler(&schema, &database_context, req, payload).await
 }
 
 #[get("/graphiql")]

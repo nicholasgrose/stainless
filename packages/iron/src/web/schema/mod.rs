@@ -1,30 +1,33 @@
-use juniper::{graphql_object, EmptyMutation, EmptySubscription, RootNode};
+use juniper::{graphql_object, EmptyMutation, EmptySubscription, FieldResult, RootNode};
 
-use crate::{database::Database, shared::config::ServerConfig};
+use crate::{database::DatabaseContext, shared::config::ServerConfig};
 
 pub struct Query;
 
-#[graphql_object(context = Database)]
+#[graphql_object(context = DatabaseContext)]
 impl Query {
     fn api_version() -> &'static str {
         "0.1"
     }
 
-    fn server_config(
-        context: &Database,
+    async fn server_config(
+        context: &DatabaseContext,
         #[graphql(description = "name of the server")] name: String,
-    ) -> Option<&ServerConfig> {
-        context.get_server(&name)
+    ) -> FieldResult<Option<ServerConfig>> {
+        let DatabaseContext(context) = context;
+        let database = context.read().await;
+
+        Ok(database.get_server_config(&name)?)
     }
 }
 
 pub type Schema =
-    RootNode<'static, Query, EmptyMutation<Database>, EmptySubscription<Database>>;
+    RootNode<'static, Query, EmptyMutation<DatabaseContext>, EmptySubscription<DatabaseContext>>;
 
 pub fn new() -> Schema {
     Schema::new(
         Query,
-        EmptyMutation::<Database>::new(),
-        EmptySubscription::<Database>::new(),
+        EmptyMutation::<DatabaseContext>::new(),
+        EmptySubscription::<DatabaseContext>::new(),
     )
 }

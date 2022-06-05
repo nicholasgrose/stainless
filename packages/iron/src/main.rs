@@ -5,8 +5,8 @@ use web::start_server;
 
 mod database;
 mod error;
-mod web;
 mod shared;
+mod web;
 
 type Result<T> = anyhow::Result<T, IronError>;
 

@@ -1,16 +1,18 @@
+use diesel::Queryable;
 use juniper::{GraphQLObject, GraphQLUnion};
 
 use self::minecraft::Minecraft;
 
 pub mod minecraft;
 
-#[derive(Clone, GraphQLObject)]
+#[derive(GraphQLObject, Queryable)]
 pub struct ServerConfig {
     pub name: String,
-    pub app: Game,
+    #[diesel(embed)]
+    pub app: App,
 }
 
-#[derive(Clone, GraphQLUnion)]
-pub enum Game {
+#[derive(GraphQLUnion)]
+pub enum App {
     Minecraft(Minecraft),
 }

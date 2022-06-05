@@ -1,50 +1,38 @@
-use std::collections::HashMap;
-
-use velcro::hash_map;
-
-use crate::shared::config::{
-    minecraft::{papermc::PaperMC, Minecraft, MinecraftServer},
-    Game, ServerConfig,
+pub mod config;
+use diesel::{
+    r2d2::{ConnectionManager, Pool},
+    SqliteConnection,
 };
+use tokio::sync::RwLock;
 
-#[derive(Default, Clone)]
+pub mod schema;
+
 pub struct Database {
-    servers: HashMap<String, ServerConfig>,
+    connection_pool: Pool<ConnectionManager<SqliteConnection>>,
 }
 
 impl Database {
-    pub fn new() -> Database {
-        Database {
-            servers: hash_map! {
-                "test".to_string(): ServerConfig {
-                    name: "test".to_string(),
-                    app: Game::Minecraft( Minecraft {
-                        jvm_runtime_arguments: vec!["-Xmx:4G".to_string()],
-                        game_version: "1.18.2".to_string(),
-                        server: MinecraftServer::PaperMC(PaperMC {
-                            project: "Paper".to_string(),
-                            build: 69
-                        })
-                    })
-                },
-                "test1".to_string(): ServerConfig {
-                    name: "test1".to_string(),
-                    app: Game::Minecraft(Minecraft {
-                        jvm_runtime_arguments: vec!["-Xmx:2G".to_string()],
-                        game_version: "1.16.5".to_string(),
-                        server: MinecraftServer::PaperMC(PaperMC {
-                            project: "Paper".to_string(),
-                            build: 68
-                        })
-                    })
-                }
-            },
-        }
-    }
-
-    pub fn get_server(&self, name: &str) -> Option<&ServerConfig> {
-        self.servers.get(name)
+    fn new(database_url: &str) -> crate::Result<Database> {
+        Ok(Database {
+            connection_pool: build_connection_pool(database_url)?,
+        })
     }
 }
 
-impl juniper::Context for Database {}
+pub struct DatabaseContext(pub RwLock<Database>);
+
+impl DatabaseContext {
+    pub fn new(database_url: &str) -> crate::Result<DatabaseContext> {
+        Ok(DatabaseContext(RwLock::new(Database::new(database_url)?)))
+    }
+}
+
+impl juniper::Context for DatabaseContext {}
+
+fn build_connection_pool(
+    database_url: &str,
+) -> crate::Result<Pool<ConnectionManager<SqliteConnection>>> {
+    let manager = ConnectionManager::new(database_url);
+
+    Ok(Pool::builder().build(manager)?)
+}

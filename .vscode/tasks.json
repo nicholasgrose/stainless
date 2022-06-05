@@ -134,7 +134,7 @@
         {
             "label": "stainless: update all",
             "type": "shell",
-            "command": "cargo update --workspace",
+            "command": "cargo update",
             "problemMatcher": [],
             "detail": "Updates all dependencies in Cargo.lock.",
             "group": "none"

@@ -8,6 +8,8 @@ use actix_web::{
 };
 use tracing_actix_web::TracingLogger;
 
+use crate::database::DatabaseContext;
+
 pub mod routes;
 pub mod schema;
 pub mod tls;
@@ -16,6 +18,7 @@ pub fn start_server(address: &str) -> crate::Result<Server> {
     let server = HttpServer::new(move || {
         App::new()
             .app_data(Data::new(schema::new()))
+            .app_data(Data::new(DatabaseContext::new("iron_db.sqlite3")))
             .wrap(
                 Cors::default()
                     .allow_any_origin()
