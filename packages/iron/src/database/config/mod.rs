@@ -3,10 +3,10 @@ use crate::shared::config::{
     App, ServerConfig,
 };
 
-use super::{schema, Database};
+use super::Database;
 
 impl Database {
-    pub fn get_server_config(&self, _name: &str) -> crate::Result<Option<ServerConfig>> {
+    pub fn get_server_config(&self, name: &str) -> crate::Result<Option<ServerConfig>> {
         let connection = self.connection_pool.get()?;
 
         Ok(None)

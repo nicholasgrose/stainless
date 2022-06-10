@@ -4,8 +4,7 @@ use diesel::{
     SqliteConnection,
 };
 use tokio::sync::RwLock;
-
-pub mod schema;
+mod schema;
 
 pub struct Database {
     connection_pool: Pool<ConnectionManager<SqliteConnection>>,

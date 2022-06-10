@@ -1,14 +1,12 @@
-use diesel::Queryable;
 use juniper::{GraphQLObject, GraphQLUnion};
 
 use self::minecraft::Minecraft;
 
 pub mod minecraft;
 
-#[derive(GraphQLObject, Queryable)]
+#[derive(GraphQLObject)]
 pub struct ServerConfig {
     pub name: String,
-    #[diesel(embed)]
     pub app: App,
 }
 

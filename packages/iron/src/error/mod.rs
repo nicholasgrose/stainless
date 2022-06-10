@@ -1,6 +1,5 @@
 use std::{fmt::Debug, io::ErrorKind};
 
-use juniper::{graphql_value, FieldError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
