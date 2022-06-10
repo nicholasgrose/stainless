@@ -16,6 +16,12 @@ pub enum IronError {
         #[backtrace]
         source: r2d2::Error,
     },
+    #[error("diesel error: {source}")]
+    Diesel {
+        #[from]
+        #[backtrace]
+        source: diesel::result::Error,
+    },
     #[error(transparent)]
     Other {
         #[from]
@@ -29,6 +35,7 @@ impl From<IronError> for std::io::Error {
         match val {
             IronError::IO { source } => source,
             IronError::R2D2 { source: _ } => std::io::Error::new(ErrorKind::Other, val),
+            IronError::Diesel { source: _ } => std::io::Error::new(ErrorKind::Other, val),
             IronError::Other { source: _ } => std::io::Error::new(ErrorKind::Other, val),
         }
     }
