@@ -17,7 +17,7 @@ impl Query {
         let DatabaseContext(context) = context;
         let database = context.read().await;
 
-        Ok(database.get_server_config(&name)?)
+        Ok(database.server_config(&name)?)
     }
 }
 
