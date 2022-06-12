@@ -79,6 +79,10 @@ fn minecraft_app(
         Some(r) => r,
         None => return Ok(None),
     };
+    let argument_rows = match minecraft_jvm_argument_rows(server_name, connection)? {
+        Some(r) => r,
+        None => return Ok(None),
+    };
     let minecraft_type_row = match minecraft_server_type_row(server_name, connection)? {
         Some(r) => r,
         None => return Ok(None),
@@ -94,9 +98,21 @@ fn minecraft_app(
 
     Ok(Some(App::Minecraft(Minecraft {
         game_version: minecraft_row.game_version,
-        jvm_runtime_arguments: vec![],
+        jvm_runtime_arguments: argument_rows.into_iter().map(|r| r.argument).collect(),
         server: minecraft_server,
     })))
+}
+
+fn minecraft_jvm_argument_rows(
+    server_name: &str,
+    connection: &mut SqliteConnection,
+) -> crate::Result<Option<Vec<schema::MinecraftJvmArgument>>> {
+    use sql::minecraft_jvm_arguments::dsl::*;
+
+    Ok(minecraft_jvm_arguments
+        .filter(name.eq(server_name))
+        .load(connection)
+        .optional()?)
 }
 
 fn minecraft_server_row(

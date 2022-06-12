@@ -1,6 +1,13 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    minecraft_jvm_arguments (name, argument) {
+        name -> Text,
+        argument -> Text,
+    }
+}
+
+diesel::table! {
     minecraft_servers (name) {
         name -> Text,
         server_type -> Text,
@@ -41,6 +48,7 @@ diesel::joinable!(minecraft_servers -> server_configs (name));
 diesel::joinable!(papermc_servers -> minecraft_servers (name));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    minecraft_jvm_arguments,
     minecraft_servers,
     minecraft_types,
     papermc_servers,

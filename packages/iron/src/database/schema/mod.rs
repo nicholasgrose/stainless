@@ -21,6 +21,12 @@ pub struct MinecraftServer {
 }
 
 #[derive(Queryable)]
+pub struct MinecraftJvmArgument {
+    pub name: String,
+    pub argument: String,
+}
+
+#[derive(Queryable)]
 pub struct MinecraftType {
     pub name: String,
     pub minecraft_server_type: String,
