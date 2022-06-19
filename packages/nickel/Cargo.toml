@@ -6,14 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.57"
+anyhow = "1.0.58"
 async-trait = "0.1.56"
 bincode = { version = "2.0.0-rc.1", features = ["serde"] }
 config = "0.13.1"
 emoji = "0.2.1"
 hex = "0.4.3"
 indicatif = "0.17.0-rc.11"
-reqwest = { version = "0.11.10", features = ["json"] }
+reqwest = { version = "0.11.11", features = ["json"] }
 serde = { version = "1.0.137", features = ["derive"] }
 sha2 = "0.10.2"
 tokio = { version = "1.19.2", features = ["full"] }

@@ -147,7 +147,7 @@ fn minecraft_server_for_type(
 ) -> crate::Result<Option<MinecraftServer>> {
     match minecraft_server_type {
         "PaperMC" => papermc_minecraft_server(server_name, connection),
-        _ => Err(anyhow!("invalid server type found").into()),
+        _ => Err(anyhow!("invalid minecraft server type found").into()),
     }
 }
 
