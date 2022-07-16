@@ -142,7 +142,7 @@
         {
             "label": "stainless: upgrade all",
             "type": "shell",
-            "command": "cargo upgrade --workspace",
+            "command": "cargo upgrade --workspace --to-lockfile",
             "problemMatcher": [],
             "dependsOn": [
                 "stainless: update all"
