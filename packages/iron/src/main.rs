@@ -1,4 +1,4 @@
-#![feature(backtrace)]
+#![feature(error_generic_member_access, provide_any)]
 
 use error::IronError;
 use web::start_server;

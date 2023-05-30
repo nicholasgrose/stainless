@@ -39,7 +39,7 @@ impl Server<PaperMCServer, PaperMCServerApp> for PaperMCServer {
         let client_info_path = self.client_info_file_path();
         let saved_client_path = Path::new(&client_info_path);
         let mut saved_client_file = File::open(saved_client_path)?;
-        let save_config = bincode::config::standard().write_fixed_array_length();
+        let save_config = bincode::config::standard();
         let saved_client: PaperMCServerApp =
             bincode::serde::decode_from_std_read(&mut saved_client_file, save_config)?;
 
@@ -141,7 +141,7 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
 
     fn save_server_info(&self, client_config: &PaperMCServer) -> crate::Result<()> {
         let mut client_info_file = File::create(Path::new(&client_config.client_info_file_path()))?;
-        let save_config = bincode::config::standard().write_fixed_array_length();
+        let save_config = bincode::config::standard();
         bincode::serde::encode_into_std_write(self, &mut client_info_file, save_config)?;
 
         Ok(())

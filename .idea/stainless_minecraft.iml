@@ -16,6 +16,9 @@
       <excludeFolder url="file://$MODULE_DIR$/nickel/target" />
       <excludeFolder url="file://$MODULE_DIR$/iron/run" />
       <excludeFolder url="file://$MODULE_DIR$/nickel/run" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/iron/run" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/nickel/run" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

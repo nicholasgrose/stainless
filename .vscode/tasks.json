@@ -102,7 +102,7 @@
         {
             "label": "stainless: upgrade iron",
             "type": "shell",
-            "command": "cargo upgrade --package iron --to-lockfile",
+            "command": "cargo upgrade --package iron",
             "problemMatcher": [],
             "dependsOn": [
                 "stainless: update iron"
@@ -122,7 +122,7 @@
         {
             "label": "stainless: upgrade nickel",
             "type": "shell",
-            "command": "cargo upgrade --package nickel --to-lockfile",
+            "command": "cargo upgrade --package nickel",
             "problemMatcher": [],
             "dependsOn": [
                 "stainless: update nickel"
@@ -142,7 +142,7 @@
         {
             "label": "stainless: upgrade all",
             "type": "shell",
-            "command": "cargo upgrade --workspace --to-lockfile",
+            "command": "cargo upgrade",
             "problemMatcher": [],
             "dependsOn": [
                 "stainless: update all"

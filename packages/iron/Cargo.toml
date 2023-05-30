@@ -7,17 +7,18 @@ edition = "2021"
 
 [dependencies]
 actix = "0.13.0"
-actix-cors = "0.6.1"
-actix-web = { version = "4.1.0", features = ["rustls"] }
-anyhow = "1.0.58"
-diesel = { version = "2.0.0-rc.1", features = ["sqlite", "r2d2"] }
-juniper = "0.15.9"
+actix-cors = "0.6.4"
+actix-web = { version = "4.3.1", features = ["rustls"] }
+anyhow = "1.0.71"
+diesel = { version = "2.1.0", features = ["sqlite", "r2d2"] }
+juniper = "0.15.11"
 juniper_actix = "0.4.0"
 r2d2 = "0.8.10"
-rustls = "0.20.6"
-rustls-pemfile = "1.0.0"
-thiserror = "1.0.31"
-tokio = "1.20.0"
-tracing = "0.1.35"
-tracing-actix-web = "0.6.0"
-velcro = "0.5.3"
+# Must be 0.20.X until Actix supports newer
+rustls = "0.20.8"
+rustls-pemfile = "1.0.2"
+thiserror = "1.0.40"
+tokio = "1.28.2"
+tracing = "0.1.37"
+tracing-actix-web = "0.7.5"
+velcro = "0.5.4"
