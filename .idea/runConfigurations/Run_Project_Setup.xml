@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Project Setup" type="CompoundRunConfigurationType">
+    <toRun name="Diesel [migration run]" type="ShConfigurationType" />
+    <toRun name="Generate Test Certificate" type="ShConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>
