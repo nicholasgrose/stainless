@@ -1,28 +1,23 @@
-pub mod config;
 use diesel::{
     r2d2::{ConnectionManager, Pool},
     SqliteConnection,
 };
-use tokio::sync::RwLock;
+
+pub mod config;
+
 mod schema;
 
-pub struct Database {
-    connection_pool: Pool<ConnectionManager<SqliteConnection>>,
-}
 
-impl Database {
-    fn new(database_url: &str) -> crate::Result<Database> {
-        Ok(Database {
-            connection_pool: build_connection_pool(database_url)?,
-        })
-    }
+#[derive(Clone)]
+pub struct DatabaseContext {
+    pub connection_pool: Pool<ConnectionManager<SqliteConnection>>,
 }
-
-pub struct DatabaseContext(pub RwLock<Database>);
 
 impl DatabaseContext {
     pub fn new(database_url: &str) -> crate::Result<DatabaseContext> {
-        Ok(DatabaseContext(RwLock::new(Database::new(database_url)?)))
+        Ok(DatabaseContext {
+            connection_pool: build_connection_pool(database_url)?
+        })
     }
 }
 

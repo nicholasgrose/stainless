@@ -3,17 +3,17 @@ use diesel::{
     ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper, SqliteConnection,
 };
 
+use crate::database::DatabaseContext;
 use crate::shared::config::{
-    minecraft::{papermc::PaperMC, Minecraft, MinecraftServer},
-    App, ServerConfig,
+    App,
+    minecraft::{Minecraft, MinecraftServer, papermc::PaperMC}, ServerConfig,
 };
 
 use super::{
-    schema::{self, sql},
-    Database,
+    schema::{self, sql}
 };
 
-impl Database {
+impl DatabaseContext {
     pub fn server_config(&self, server_name: &str) -> crate::Result<Option<ServerConfig>> {
         let mut connection = self.connection_pool.get()?;
         let config_row = match server_config_row(server_name, &mut connection)? {

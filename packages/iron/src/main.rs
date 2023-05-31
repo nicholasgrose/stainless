@@ -12,5 +12,6 @@ type Result<T> = anyhow::Result<T, IronError>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    start_server("localhost:8080")?.await
+    env_logger::init();
+    start_server("127.0.0.1:8080")?.await
 }

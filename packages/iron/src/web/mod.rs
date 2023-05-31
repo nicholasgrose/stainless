@@ -15,10 +15,11 @@ pub mod schema;
 pub mod tls;
 
 pub fn start_server(address: &str) -> crate::Result<Server> {
+    let database = DatabaseContext::new("iron_db.sqlite3")?;
     let server = HttpServer::new(move || {
         App::new()
             .app_data(Data::new(schema::new()))
-            .app_data(Data::new(DatabaseContext::new("iron_db.sqlite3")))
+            .app_data(Data::new(database.clone()))
             .wrap(
                 Cors::default()
                     .allow_any_origin()

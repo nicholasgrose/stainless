@@ -1,15 +1,10 @@
-use actix_web::{
-    dev::HttpServiceFactory,
-    get, route, services,
-    web::{Data, Payload},
-    HttpRequest, HttpResponse,
-};
+use actix_web::{dev::HttpServiceFactory, get, HttpRequest, HttpResponse, route, services, web::{Data, Payload}};
 use juniper_actix::{graphiql_handler, graphql_handler, playground_handler};
 
 use crate::{database::DatabaseContext, web::schema::Schema};
 
 #[route("/graphql", method = "GET", method = "POST")]
-pub async fn graphql<'a>(
+pub async fn graphql(
     req: HttpRequest,
     payload: Payload,
     schema: Data<Schema>,
