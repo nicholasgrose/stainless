@@ -1,0 +1,23 @@
+{
+  "name": "diesel-cli",
+  "version": "2.1.0",
+  "dependencies": [
+    {
+      "name": "libpq",
+      "version>=": "12.0"
+    },
+    {
+      "name": "sqlite3"
+    },
+    {
+      "name": "libmysql"
+    }
+  ],
+  "overrides": [
+    {
+      "name": "libpq",
+      "version": "12.0"
+    }
+  ],
+  "builtin-baseline": "2f56fdad4bcf43c21ec6f952cf7b91c8c43c5c0d"
+}

@@ -19,6 +19,14 @@
       <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
       <excludeFolder url="file://$MODULE_DIR$/packages/iron/run" />
       <excludeFolder url="file://$MODULE_DIR$/packages/nickel/run" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows-static-md/debug" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows-static-md/include/boost/bimap/detail/debug" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows-static-md/include/boost/preprocessor/debug" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows-static-md/include/boost/spirit/home/classic/debug" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows/debug" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows/tools/boost-build/.vscode" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows/tools/boost-build/test/prebuilt/ext/debug" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

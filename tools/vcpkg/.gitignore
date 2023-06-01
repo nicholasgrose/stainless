@@ -1,0 +1,2 @@
+# The default install directory for vcpkg
+vcpkg_installed/
