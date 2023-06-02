@@ -3,7 +3,6 @@ use diesel::{
     ExpressionMethods, OptionalExtension, QueryDsl, RunQueryDsl, SelectableHelper, SqliteConnection,
 };
 
-use crate::database::DatabaseContext;
 use crate::shared::config::{
     App,
     minecraft::{Minecraft, MinecraftServer, papermc::PaperMC}, ServerConfig,
@@ -13,27 +12,27 @@ use super::{
     schema::{self, sql}
 };
 
-impl DatabaseContext {
-    pub fn server_config(&self, server_name: &str) -> crate::Result<Option<ServerConfig>> {
-        let mut connection = self.connection_pool.get()?;
-        let config_row = match server_config_row(server_name, &mut connection)? {
-            Some(r) => r,
-            None => return Ok(None),
-        };
-        let server_type_row = match server_type_row(server_name, &mut connection)? {
-            Some(r) => r,
-            None => return Ok(None),
-        };
-        let app = match app_for_type(server_name, &server_type_row.server_type, &mut connection)? {
-            Some(a) => a,
-            None => return Ok(None),
-        };
+pub fn server_config(
+    server_name: &str,
+    connection: &mut SqliteConnection
+) -> crate::Result<Option<ServerConfig>> {
+    let config_row = match server_config_row(server_name, connection)? {
+        Some(r) => r,
+        None => return Ok(None),
+    };
+    let server_type_row = match server_type_row(server_name, connection)? {
+        Some(r) => r,
+        None => return Ok(None),
+    };
+    let app = match app_for_type(server_name, &server_type_row.server_type, connection)? {
+        Some(a) => a,
+        None => return Ok(None),
+    };
 
-        Ok(Some(ServerConfig {
-            name: config_row.name,
-            app,
-        }))
-    }
+    Ok(Some(ServerConfig {
+        name: config_row.name,
+        app,
+    }))
 }
 
 fn server_config_row(

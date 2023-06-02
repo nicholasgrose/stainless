@@ -1,6 +1,8 @@
+use actix_web::web;
 use juniper::{EmptyMutation, EmptySubscription, FieldResult, graphql_object, RootNode};
 
 use crate::{database::DatabaseContext, shared::config::ServerConfig};
+use crate::database::config::server_config;
 
 pub struct Query;
 
@@ -14,7 +16,13 @@ impl Query {
         context: &DatabaseContext,
         #[graphql(description = "name of the server")] name: String,
     ) -> FieldResult<Option<ServerConfig>> {
-        Ok(context.server_config(&name)?)
+        let mut connection = context.connection_pool.get()?;
+
+        let config_result = web::block(move || {
+            server_config(&name, &mut connection)
+        }).await?;
+
+        Ok(config_result?)
     }
 }
 
