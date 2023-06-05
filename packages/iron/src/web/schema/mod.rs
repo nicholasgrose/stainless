@@ -1,4 +1,3 @@
-use actix_web::web;
 use juniper::{EmptyMutation, EmptySubscription, FieldResult, graphql_object, RootNode};
 
 use crate::{database::DatabaseContext, shared::config::ServerConfig};
@@ -18,7 +17,7 @@ impl Query {
     ) -> FieldResult<Option<ServerConfig>> {
         let mut connection = context.connection_pool.get()?;
 
-        let config_result = web::block(move || {
+        let config_result = tokio::spawn(async {
             server_config(&name, &mut connection)
         }).await?;
 

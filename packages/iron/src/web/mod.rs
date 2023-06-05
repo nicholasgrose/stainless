@@ -1,39 +1,28 @@
-use actix_cors::Cors;
-use actix_web::{
-    dev::Server,
-    http::{header, Method},
-    middleware::Compress,
-    web::Data,
-    App, HttpServer,
-};
-use tracing_actix_web::TracingLogger;
+use std::sync::Arc;
+use axum::{Router, ServiceExt};
+use axum::routing::get;
+use axum_server::Server;
+use axum_server::tls_rustls::{RustlsAcceptor, RustlsConfig};
 
 use crate::database::DatabaseContext;
+use crate::web::routes::{graphiql, graphql, playground};
 
 pub mod routes;
 pub mod schema;
-pub mod tls;
 
-pub fn start_server(address: &str) -> crate::Result<Server> {
+pub async fn start_server(address: &str) -> crate::Result<Server<RustlsAcceptor>> {
+    let graphql_url = format!("{}/graphql", address);
+    let schema = schema::new();
     let database = DatabaseContext::new("iron_db.sqlite3")?;
-    let server = HttpServer::new(move || {
-        App::new()
-            .app_data(Data::new(schema::new()))
-            .app_data(Data::new(database.clone()))
-            .wrap(
-                Cors::default()
-                    .allow_any_origin()
-                    .allowed_methods(vec![Method::POST, Method::GET])
-                    .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
-                    .allowed_header(header::CONTENT_TYPE)
-                    .supports_credentials()
-                    .max_age(3600),
-            )
-            .wrap(Compress::default())
-            .wrap(TracingLogger::default())
-            .service(routes::all())
-    });
-    let tls_config = tls::load_tls_config()?;
 
-    Ok(server.bind_rustls(address, tls_config)?.run())
+    let app = Router::new()
+        .route("/graphql", get(graphql).post(graphql))
+        .route("/graphiql", get(|| async { graphiql(&graphql_url) }))
+        .route("/playground", get(|| async { playground(&graphql_url) }))
+        .with_state(Arc::new(schema))
+        .with_state(Arc::new(database));
+    let tls_config = RustlsConfig::from_pem_file("cert.pem", "key.pem");
+
+    axum_server::bind_rustls(address.parse()?, tls_config)
+        .serve(app.into_make_service())
 }

@@ -1,28 +1,28 @@
-use actix_web::{dev::HttpServiceFactory, get, HttpRequest, HttpResponse, route, services, web::{Data, Payload}};
-use juniper_actix::{graphiql_handler, graphql_handler, playground_handler};
-
+use std::sync::Arc;
+use axum::extract::State;
+use axum::http::{Request, Response};
+use hyper::Body;
 use crate::{database::DatabaseContext, web::schema::Schema};
 
-#[route("/graphql", method = "GET", method = "POST")]
 pub async fn graphql(
-    req: HttpRequest,
-    payload: Payload,
-    schema: Data<Schema>,
-    database_context: Data<DatabaseContext>,
-) -> actix_web::Result<HttpResponse> {
-    graphql_handler(&schema, &database_context, req, payload).await
+    request: Request<Body>,
+    schema_state: State<Arc<Schema>>,
+    database_state: State<Arc<DatabaseContext>>,
+) -> Response<Body> {
+    let State(schema) = schema_state;
+    let State(database) = database_state;
+
+    juniper_hyper::graphql(schema, database, request).await
 }
 
-#[get("/graphiql")]
-pub async fn graphiql() -> actix_web::Result<HttpResponse> {
-    graphiql_handler("/graphql", None).await
+macro_rules! give_both_endpoints {
+    ($handler:path, $address:ident) => { $handler($address, Some($address)) };
 }
 
-#[get("/playground")]
-pub async fn playground() -> actix_web::Result<HttpResponse> {
-    playground_handler("/graphql", None).await
+pub async fn graphiql(graphql_address: &str) -> Response<Body> {
+    give_both_endpoints!(juniper_hyper::graphiql, graphql_address)
 }
 
-pub fn all() -> impl HttpServiceFactory {
-    services![graphql, graphiql, playground]
+pub async fn playground(graphql_address: &str) -> Response<Body> {
+    give_both_endpoints!(juniper_hyper::playground, graphql_address)
 }
