@@ -21,8 +21,6 @@ impl DatabaseContext {
     }
 }
 
-impl juniper::Context for DatabaseContext {}
-
 fn build_connection_pool(
     database_url: &str,
 ) -> crate::Result<Pool<ConnectionManager<SqliteConnection>>> {

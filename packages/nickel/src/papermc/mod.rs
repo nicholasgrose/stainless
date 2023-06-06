@@ -166,7 +166,7 @@ impl ServerApplication<PaperMCServer, PaperMCServerApp> for PaperMCServerApp {
 
         let mut server_process = Command::new("java")
             .arg("-jar")
-            .arg(&self.application_name())
+            .arg(self.application_name())
             .arg("nogui")
             .args(server_config.jvm_arguments())
             .stdin(Stdio::piped())

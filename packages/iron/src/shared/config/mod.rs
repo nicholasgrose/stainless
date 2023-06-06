@@ -1,16 +1,14 @@
-use juniper::{GraphQLObject, GraphQLUnion};
-
 use self::minecraft::Minecraft;
 
 pub mod minecraft;
 
-#[derive(GraphQLObject)]
+#[derive(async_graphql::SimpleObject)]
 pub struct ServerConfig {
     pub name: String,
     pub app: App,
 }
 
-#[derive(GraphQLUnion)]
+#[derive(async_graphql::Union)]
 pub enum App {
     Minecraft(Minecraft),
 }

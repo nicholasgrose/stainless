@@ -2,5 +2,6 @@
 resolver = "2"
 members = [
     "packages/iron",
+    "packages/iron/migration",
     "packages/nickel"
 ]

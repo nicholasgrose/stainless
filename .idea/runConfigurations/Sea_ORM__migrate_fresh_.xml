@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Diesel [migration redo]" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value="diesel migration redo" />
+  <configuration default="false" name="Sea ORM [migrate fresh]" type="ShConfigurationType">
+    <option name="SCRIPT_TEXT" value="sea-orm-cli migrate fresh -d .." />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
     <option name="SCRIPT_OPTIONS" value="" />

@@ -1,37 +1,27 @@
-use juniper::{EmptyMutation, EmptySubscription, FieldResult, graphql_object, RootNode};
-
-use crate::{database::DatabaseContext, shared::config::ServerConfig};
+use async_graphql::{Context, EmptyMutation, EmptySubscription, Schema};
 use crate::database::config::server_config;
+use crate::database::DatabaseContext;
 
-pub struct Query;
+use crate::shared::config::ServerConfig;
 
-#[graphql_object(context = DatabaseContext)]
-impl Query {
-    fn api_version() -> &'static str {
+pub struct QueryRoot;
+
+#[async_graphql::Object]
+impl QueryRoot {
+    async fn api_version(&self) -> &'static str {
         "0.1"
     }
 
-    async fn server_config(
-        context: &DatabaseContext,
-        #[graphql(description = "name of the server")] name: String,
-    ) -> FieldResult<Option<ServerConfig>> {
-        let mut connection = context.connection_pool.get()?;
+    async fn server_config<'a>(
+        &self,
+        context: &Context<'a>,
+        #[graphql(desc = "The name of the server")] name: String,
+    ) -> async_graphql::Result<Option<ServerConfig>> {
+        let connection_pool = &context.data::<DatabaseContext>()?.connection_pool;
+        let mut connection = connection_pool.get()?;
 
-        let config_result = tokio::spawn(async {
-            server_config(&name, &mut connection)
-        }).await?;
-
-        Ok(config_result?)
+        Ok(server_config(&name, &mut connection)?)
     }
 }
 
-pub type Schema =
-RootNode<'static, Query, EmptyMutation<DatabaseContext>, EmptySubscription<DatabaseContext>>;
-
-pub fn new() -> Schema {
-    Schema::new(
-        Query,
-        EmptyMutation::<DatabaseContext>::new(),
-        EmptySubscription::<DatabaseContext>::new(),
-    )
-}
+pub type IronSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
