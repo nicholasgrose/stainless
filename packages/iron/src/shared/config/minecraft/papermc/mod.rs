@@ -1,5 +1,5 @@
 #[derive(async_graphql::SimpleObject)]
-pub struct PaperMC {
+pub struct PaperMcConfig {
     pub project: String,
     pub build: i32,
 }

@@ -1,8 +1,8 @@
-use async_graphql::{Context, EmptyMutation, EmptySubscription, Schema};
 use crate::database::config::server_config;
-use crate::database::DatabaseContext;
+use async_graphql::{Context, EmptyMutation, EmptySubscription, Schema};
+use sea_orm::DatabaseConnection;
 
-use crate::shared::config::ServerConfig;
+use crate::shared::config::GameServerConfig;
 
 pub struct QueryRoot;
 
@@ -15,12 +15,11 @@ impl QueryRoot {
     async fn server_config<'a>(
         &self,
         context: &Context<'a>,
-        #[graphql(desc = "The name of the server")] name: String,
-    ) -> async_graphql::Result<Option<ServerConfig>> {
-        let connection_pool = &context.data::<DatabaseContext>()?.connection_pool;
-        let mut connection = connection_pool.get()?;
+        #[graphql(desc = "The id of the server")] id: i32,
+    ) -> async_graphql::Result<Option<GameServerConfig>> {
+        let connection = context.data::<DatabaseConnection>()?;
 
-        Ok(server_config(&name, &mut connection)?)
+        Ok(server_config(id, connection).await?)
     }
 }
 

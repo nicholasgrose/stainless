@@ -1,15 +1,15 @@
-use self::papermc::PaperMC;
+use self::papermc::PaperMcConfig;
 
 pub mod papermc;
 
 #[derive(async_graphql::SimpleObject)]
-pub struct Minecraft {
+pub struct MinecraftConfig {
     pub jvm_runtime_arguments: Vec<String>,
     pub game_version: String,
-    pub server: MinecraftServer,
+    pub server: MinecraftServerConfig,
 }
 
 #[derive(async_graphql::Union)]
-pub enum MinecraftServer {
-    PaperMC(PaperMC),
+pub enum MinecraftServerConfig {
+    PaperMC(PaperMcConfig),
 }

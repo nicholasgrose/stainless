@@ -2,8 +2,8 @@ use async_graphql::{EmptyMutation, EmptySubscription, Schema};
 use axum::{Extension, Router};
 use axum::routing::get;
 use axum_server::tls_rustls::RustlsConfig;
+use sea_orm::Database;
 
-use crate::database::DatabaseContext;
 use crate::web::routes::graphql;
 use crate::web::schema::QueryRoot;
 
@@ -12,7 +12,7 @@ pub mod schema;
 
 pub async fn start_server(address: &str) -> std::io::Result<()> {
     let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
-        .data(DatabaseContext::new("iron_db.sqlite3").unwrap())
+        .data(Database::connect("sqlite://iron_db.sqlite3").await.unwrap())
         .finish();
 
     let app = Router::new()
