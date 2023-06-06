@@ -3,6 +3,7 @@
         "actix",
         "alphanum",
         "graphiql",
+        "Iden",
         "indicatif",
         "Insertable",
         "minecraft",
