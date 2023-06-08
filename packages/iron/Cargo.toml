@@ -11,8 +11,8 @@ axum = { version = "0.6.18", features = ["macros", "tracing"] }
 axum-server = { version = "0.5.1", features = ["tls-rustls"] }
 env_logger = "0.10.0"
 hyper = { version = "0.14.26", features = ["full"] }
-async-graphql = { version = "5.0.9", features = ["tracing"] }
-async-graphql-axum = "5.0.9"
+async-graphql = { version = "5.0.10", features = ["tracing"] }
+async-graphql-axum = "5.0.10"
 rustls = "0.21.1"
 rustls-pemfile = "1.0.2"
 sea-orm = { version = "^0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print" ] }
