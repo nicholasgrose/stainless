@@ -1,4 +1,4 @@
-use sea_orm::{DatabaseConnection, EntityTrait};
+use sea_orm::{DatabaseConnection, EntityTrait, ModelTrait, TryIntoModel};
 
 use crate::shared::config::{
     minecraft::{papermc::PaperMcConfig, MinecraftConfig, MinecraftServerConfig},
@@ -13,8 +13,7 @@ pub async fn server_config(
 ) -> anyhow::Result<Option<GameServerConfig>> {
     let server_row = GameServer::find_by_id(id)
         .left_join(MinecraftServer)
-        // .left_join(S)
-        // .left_join(PaperMcServer)
+        .left_join(PaperMcServer)
         .one(connection)
         .await?;
 

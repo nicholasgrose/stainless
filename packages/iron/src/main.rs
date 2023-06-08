@@ -1,5 +1,4 @@
 #![forbid(unsafe_code)]
-#![feature(error_generic_member_access, provide_any)]
 
 use web::start_server;
 

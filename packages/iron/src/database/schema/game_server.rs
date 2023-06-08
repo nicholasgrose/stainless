@@ -14,11 +14,19 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::minecraft_server::Entity")]
     MinecraftServer,
+    #[sea_orm(has_many = "super::paper_mc_server::Entity")]
+    PaperMcServer,
 }
 
 impl Related<super::minecraft_server::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::MinecraftServer.def()
+    }
+}
+
+impl Related<super::paper_mc_server::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::PaperMcServer.def()
     }
 }
 

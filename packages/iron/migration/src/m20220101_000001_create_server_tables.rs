@@ -178,6 +178,11 @@ impl MigrationTrait for Migration {
                     )
                     .foreign_key(
                         ForeignKey::create()
+                            .from(PaperMcServer::Table, PaperMcServer::Id)
+                            .to(GameServer::Table, GameServer::Id),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
                             .from(
                                 PaperMcServer::Table,
                                 (PaperMcServer::Id, PaperMcServer::ServerType),
