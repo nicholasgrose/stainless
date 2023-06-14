@@ -15,7 +15,7 @@
 				"body": {
 					"mode": "graphql",
 					"graphql": {
-						"query": "{\r\n  apiVersion\r\n  serverConfig(name: \"test\") {\r\n    name\r\n    app {\r\n      ... on Minecraft {\r\n        gameVersion\r\n        jvmRuntimeArguments\r\n        server {\r\n          ... on PaperMC {\r\n            project\r\n            build\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
+						"query": "{\r\n  apiVersion\r\n  serverConfig(id: \"67e55044-10b1-426f-9247-bb680e5fe0c8\") {\r\n    name\r\n    app {\r\n      ... on MinecraftConfig {\r\n        gameVersion\r\n        jvmRuntimeArguments\r\n        server {\r\n          ... on PaperMcConfig {\r\n            project\r\n            build\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n",
 						"variables": ""
 					}
 				},

@@ -13,9 +13,8 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(GameServer::Id)
-                            .integer()
+                            .uuid()
                             .not_null()
-                            .auto_increment()
                             .primary_key(),
                     )
                     .col(ColumnDef::new(GameServer::Name).string().not_null())
@@ -28,12 +27,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(GameType::Table)
                     .if_not_exists()
-                    .col(
-                        ColumnDef::new(GameType::Id)
-                            .integer()
-                            .not_null()
-                            .primary_key(),
-                    )
+                    .col(ColumnDef::new(GameType::Id).uuid().not_null().primary_key())
                     .col(
                         ColumnDef::new(GameType::TypeName)
                             .enumeration(GameType::TypeName, [MinecraftServer::Table])
@@ -64,7 +58,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(MinecraftServer::Id)
-                            .integer()
+                            .uuid()
                             .not_null()
                             .primary_key(),
                     )
@@ -103,13 +97,20 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(MinecraftJvmArgument::ArgumentId)
-                        .integer()
-                        .not_null()
-                        .auto_increment()
-                        .primary_key(),
+                            .uuid()
+                            .not_null()
+                            .primary_key(),
                     )
-                    .col(ColumnDef::new(MinecraftJvmArgument::ServerId).integer().not_null())
-                    .col(ColumnDef::new(MinecraftJvmArgument::Argument).string().not_null())
+                    .col(
+                        ColumnDef::new(MinecraftJvmArgument::ServerId)
+                            .integer()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(MinecraftJvmArgument::Argument)
+                            .string()
+                            .not_null(),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .from(MinecraftJvmArgument::Table, MinecraftJvmArgument::ServerId)
@@ -126,7 +127,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(MinecraftServerType::Id)
-                            .integer()
+                            .uuid()
                             .not_null()
                             .primary_key(),
                     )
@@ -159,7 +160,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(
                         ColumnDef::new(PaperMcServer::Id)
-                            .integer()
+                            .uuid()
                             .not_null()
                             .primary_key(),
                     )

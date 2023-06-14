@@ -1,17 +1,18 @@
 use sea_orm::{DatabaseConnection, EntityTrait};
+use uuid::Uuid;
 
 use crate::shared::config::{
-    AppConfig,
-    GameServerConfig, minecraft::{MinecraftConfig, MinecraftServerConfig, papermc::PaperMcConfig},
+    minecraft::{papermc::PaperMcConfig, MinecraftConfig, MinecraftServerConfig},
+    AppConfig, GameServerConfig,
 };
 
 use super::schema::prelude::*;
 
 pub async fn server_config(
-    id: i32,
+    id: Uuid,
     connection: &DatabaseConnection,
 ) -> anyhow::Result<Option<GameServerConfig>> {
-    let server_row = GameServer::find_by_id(id)
+    let server_row = GameServer::find_by_id(id.to_string())
         .left_join(MinecraftServer)
         .left_join(PaperMcServer)
         .one(connection)

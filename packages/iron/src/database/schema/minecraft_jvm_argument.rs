@@ -5,8 +5,8 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "minecraft_jvm_argument")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub argument_id: i32,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub argument_id: String,
     pub server_id: i32,
     pub argument: String,
 }
