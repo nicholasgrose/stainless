@@ -3,7 +3,6 @@
 use web::start_server;
 
 mod database;
-mod shared;
 mod web;
 
 #[tokio::main]

@@ -1,4 +1,4 @@
-use self::papermc::PaperMcConfig;
+use crate::web::schema::query::game::server::minecraft::papermc::PaperMcConfig;
 
 pub mod papermc;
 

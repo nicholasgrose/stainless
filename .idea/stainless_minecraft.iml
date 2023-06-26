@@ -10,6 +10,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/nickel/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/nickel/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/iron/migration/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/iron/seography/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/run" />
       <excludeFolder url="file://$MODULE_DIR$/.history" />
@@ -28,6 +29,7 @@
       <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows/debug" />
       <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows/tools/boost-build/.vscode" />
       <excludeFolder url="file://$MODULE_DIR$/tools/vcpkg/vcpkg_installed/x64-windows/tools/boost-build/test/prebuilt/ext/debug" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/iron/seography/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

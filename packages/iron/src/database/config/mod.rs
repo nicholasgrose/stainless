@@ -1,12 +1,11 @@
 use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
-use crate::shared::config::{
-    minecraft::{papermc::PaperMcConfig, MinecraftConfig, MinecraftServerConfig},
-    AppConfig, GameServerConfig,
-};
+use crate::web::schema::query::game::server::minecraft::papermc::PaperMcConfig;
+use crate::web::schema::query::game::server::minecraft::{MinecraftConfig, MinecraftServerConfig};
+use crate::web::schema::query::game::server::{AppConfig, GameServerConfig};
 
-use super::schema::prelude::*;
+use super::sql::prelude::*;
 
 pub async fn server_config(
     id: Uuid,
