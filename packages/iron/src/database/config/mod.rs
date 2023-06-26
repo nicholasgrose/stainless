@@ -1,9 +1,9 @@
 use sea_orm::{DatabaseConnection, EntityTrait};
 use uuid::Uuid;
 
-use crate::web::schema::query::game::server::minecraft::papermc::PaperMcConfig;
-use crate::web::schema::query::game::server::minecraft::{MinecraftConfig, MinecraftServerConfig};
-use crate::web::schema::query::game::server::{AppConfig, GameServerConfig};
+use crate::web::schema::game::server::minecraft::papermc::PaperMcConfig;
+use crate::web::schema::game::server::minecraft::{MinecraftConfig, MinecraftServerConfig};
+use crate::web::schema::game::server::{AppConfig, GameServerConfig};
 
 use super::sql::prelude::*;
 
