@@ -6,19 +6,19 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.71"
-axum = { version = "0.6.18", features = ["macros", "tracing"] }
+anyhow = "1.0.72"
+axum = { version = "0.6.19", features = ["macros", "tracing"] }
 axum-server = { version = "0.5.1", features = ["tls-rustls"] }
 env_logger = "0.10.0"
 hyper = { version = "0.14.27", features = ["full"] }
 async-graphql = { version = "5.0.10", features = ["tracing", "uuid"] }
 async-graphql-axum = "5.0.10"
-rustls = "0.21.2"
+rustls = "0.21.6"
 rustls-pemfile = "1.0.3"
 sea-orm = { version = "^0", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print", "with-uuid", "with-chrono" ] }
-thiserror = "1.0.40"
+thiserror = "1.0.44"
 tokio = { version = "1.29.1", features = ["full"] }
 tower = "0.4.13"
 tracing = "0.1.37"
 velcro = "0.5.4"
-uuid = "1.4.0"
+uuid = "1.4.1"
