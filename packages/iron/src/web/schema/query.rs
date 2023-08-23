@@ -5,10 +5,10 @@ use uuid::Uuid;
 use crate::database::config::server_config;
 use crate::web::schema::game::server::GameServerConfig;
 
-pub struct QueryRoot;
+pub struct IronQueryRoot;
 
 #[async_graphql::Object]
-impl QueryRoot {
+impl IronQueryRoot {
     async fn api_version(&self) -> &'static str {
         "0.1"
     }

@@ -6,13 +6,13 @@ use axum_server::tls_rustls::RustlsConfig;
 use sea_orm::Database;
 
 use crate::web::routes::{graphiql, graphql, playground};
-use crate::web::schema::query::QueryRoot;
+use crate::web::schema::query::IronQueryRoot;
 
 pub mod routes;
 pub mod schema;
 
 pub async fn start_server(address: &str) -> anyhow::Result<()> {
-    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
+    let schema = Schema::build(IronQueryRoot, EmptyMutation, EmptySubscription)
         .data(Database::connect("sqlite://iron_db.sqlite3").await?)
         .finish();
 

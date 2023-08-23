@@ -1,7 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
+    "packages/database/migration",
+    "packages/database/entity",
     "packages/iron",
-    "packages/iron/migration",
     "packages/nickel"
 ]

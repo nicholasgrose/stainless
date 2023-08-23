@@ -1,11 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Sea ORM [migrate up]" type="ShConfigurationType">
+  <configuration default="false" name="Sea ORM [migrate up]" type="ShConfigurationType" folderName="SeaORM">
     <option name="SCRIPT_TEXT" value="sea-orm-cli migrate up" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
     <option name="SCRIPT_OPTIONS" value="" />
     <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
-    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$/packages/iron" />
+    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$/packages/database" />
     <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
     <option name="INTERPRETER_PATH" value="/usr/bin/zsh" />
     <option name="INTERPRETER_OPTIONS" value="" />
