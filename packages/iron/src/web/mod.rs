@@ -1,3 +1,4 @@
+use crate::config::IronConfig;
 use anyhow::Context;
 use async_graphql::{EmptyMutation, EmptySubscription, Schema};
 use axum::routing::get;
@@ -11,9 +12,9 @@ use crate::web::schema::query::IronQueryRoot;
 pub mod routes;
 pub mod schema;
 
-pub async fn start_server(address: &str) -> anyhow::Result<()> {
+pub async fn start_server(config: IronConfig) -> anyhow::Result<()> {
     let schema = Schema::build(IronQueryRoot, EmptyMutation, EmptySubscription)
-        .data(Database::connect("sqlite://iron_db.sqlite3").await?)
+        .data(Database::connect(config.database_uri).await?)
         .finish();
 
     let app = Router::new()
@@ -21,10 +22,12 @@ pub async fn start_server(address: &str) -> anyhow::Result<()> {
         .route("/graphiql", get(graphiql))
         .route("/playground", get(playground))
         .layer(Extension(schema));
-    let tls_config = RustlsConfig::from_pem_file("cert.pem", "key.pem").await?;
+    let tls_config =
+        RustlsConfig::from_pem_file(config.tls.certificate_file_path, config.tls.key_file_path)
+            .await?;
 
-    axum_server::bind_rustls(address.parse()?, tls_config)
+    axum_server::bind_rustls(config.address, tls_config)
         .serve(app.into_make_service())
         .await
-        .with_context(|| format!("Server running on {} experienced an error", address))
+        .with_context(|| "Server experienced an error during execution")
 }
