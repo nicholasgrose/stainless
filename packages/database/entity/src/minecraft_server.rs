@@ -7,33 +7,32 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub server: String,
     pub game_version: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::paper_mc_server::Entity")]
-    PaperMcServer,
     #[sea_orm(
-        belongs_to = "super::server_host::Entity",
-        from = "Column::Server",
-        to = "super::server_host::Column::Id",
+        belongs_to = "super::application::Entity",
+        from = "Column::Id",
+        to = "super::application::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    ServerHost,
+    Application,
+    #[sea_orm(has_many = "super::paper_mc_server::Entity")]
+    PaperMcServer,
+}
+
+impl Related<super::application::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Application.def()
+    }
 }
 
 impl Related<super::paper_mc_server::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::PaperMcServer.def()
-    }
-}
-
-impl Related<super::server_host::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::ServerHost.def()
     }
 }
 

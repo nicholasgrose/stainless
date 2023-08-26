@@ -12,10 +12,11 @@ message MinecraftServerDefinition {
 message PaperMcServerDefinition {
   MinecraftServerDefinition minecraft_server_definition = 1;
   PaperMcProject project = 2;
-  optional int32 build = 3;
-  optional bool build_update_off = 4;
 }
 
 enum PaperMcProject {
   Paper = 0;
+  Folia = 1;
+  Velocity = 2;
+  Waterfall = 3;
 }

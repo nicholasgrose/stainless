@@ -2,7 +2,6 @@
 
 pub mod prelude;
 
-pub mod executable;
+pub mod application;
 pub mod minecraft_server;
 pub mod paper_mc_server;
-pub mod server_host;

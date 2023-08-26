@@ -1,5 +1,6 @@
-use crate::m20230821_024525_create_server_tables::ServerHost;
 use sea_orm_migration::prelude::*;
+
+use crate::m20230821_024525_create_server_tables::Application;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -37,7 +38,6 @@ impl Migration {
                             .not_null()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(MinecraftServer::Server).uuid().not_null())
                     .col(
                         ColumnDef::new(MinecraftServer::GameVersion)
                             .string()
@@ -45,8 +45,8 @@ impl Migration {
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from(MinecraftServer::Table, MinecraftServer::Server)
-                            .to(ServerHost::Table, ServerHost::Id),
+                            .from(MinecraftServer::Table, MinecraftServer::Id)
+                            .to(Application::Table, Application::Id),
                     )
                     .to_owned(),
             )
@@ -68,11 +68,6 @@ impl Migration {
                             .not_null()
                             .primary_key(),
                     )
-                    .col(
-                        ColumnDef::new(PaperMcServer::MinecraftServer)
-                            .uuid()
-                            .not_null(),
-                    )
                     .col(ColumnDef::new(PaperMcServer::Build).unsigned().not_null())
                     .col(ColumnDef::new(PaperMcServer::Project).string().not_null())
                     .col(
@@ -82,7 +77,7 @@ impl Migration {
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .from(PaperMcServer::Table, PaperMcServer::MinecraftServer)
+                            .from(PaperMcServer::Table, PaperMcServer::Id)
                             .to(MinecraftServer::Table, MinecraftServer::Id),
                     )
                     .to_owned(),
@@ -95,7 +90,6 @@ impl Migration {
 enum MinecraftServer {
     Table,
     Id,
-    Server,
     GameVersion,
 }
 
@@ -103,7 +97,6 @@ enum MinecraftServer {
 enum PaperMcServer {
     Table,
     Id,
-    MinecraftServer,
     Project,
     Build,
     BuildUpdateOff,
