@@ -24,9 +24,7 @@ pub async fn start_server(config: IronConfig) -> anyhow::Result<()> {
         .trace_fn(|_| tracing::info_span!("iron_server"))
         .layer(middleware)
         .add_service(MinecraftServerCreatorServer::new(
-            IronMinecraftServerCreator {
-                db_connection: db_connection,
-            },
+            IronMinecraftServerCreator { db_connection },
         ))
         .serve(config.address)
         .await
