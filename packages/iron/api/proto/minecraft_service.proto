@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "minecraft_server.proto";
+
+package minecraft_service;
+
+service MinecraftServerCreator {
+  rpc CreatePaperMcServer (PaperMcServerDefinition) returns (MinecraftServerCreateResponse);
+}
+
+message MinecraftServerCreateResponse {
+}

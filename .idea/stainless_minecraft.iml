@@ -6,12 +6,13 @@
       <sourceFolder url="file://$MODULE_DIR$/iron/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/nickel/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/nickel/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/packages/iron/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/nickel/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/nickel/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/iron/seography/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/database/migration/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/database/entity/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/iron/api/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/iron/server/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/run" />
       <excludeFolder url="file://$MODULE_DIR$/.history" />

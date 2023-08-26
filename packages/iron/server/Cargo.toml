@@ -1,0 +1,19 @@
+[package]
+name = "iron"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+entity = { path = "../../database/entity" }
+iron_api = { path = "../api" }
+sea-orm = { version = "0", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print", "with-uuid", "with-chrono"] }
+tokio = { version = "1.32", features = ["full"] }
+tonic = { version = "0.9", features = ["tls"] }
+tower = { version = "0.4", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+uuid = "1.4"
+velcro = "0.5"

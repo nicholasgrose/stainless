@@ -3,12 +3,14 @@ use std::net::SocketAddr;
 
 use anyhow::Context;
 
+#[derive(Debug)]
 pub struct IronConfig {
     pub database_uri: String,
     pub tls: IronTlsConfig,
     pub address: SocketAddr,
 }
 
+#[derive(Debug)]
 pub struct IronTlsConfig {
     pub certificate_file_path: String,
     pub key_file_path: String,

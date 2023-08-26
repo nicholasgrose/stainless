@@ -9,6 +9,10 @@ mod web;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    env_logger::init();
-    start_server(IronConfig::load().unwrap_or_default()).await
+    tracing_subscriber::fmt::init();
+
+    let config = IronConfig::load().unwrap_or_default();
+    tracing::info!("{:?}", config);
+
+    start_server(config).await
 }

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "server.proto";
+
+package minecraft_service;
+
+message MinecraftServerDefinition {
+  ServerDefinition server_definition = 1;
+  string game_version = 2;
+}
+
+message PaperMcServerDefinition {
+  MinecraftServerDefinition minecraft_server_definition = 1;
+  PaperMcProject project = 2;
+  optional int32 build = 3;
+  optional bool build_update_off = 4;
+}
+
+enum PaperMcProject {
+  Paper = 0;
+}
