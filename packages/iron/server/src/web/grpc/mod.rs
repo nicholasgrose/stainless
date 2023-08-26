@@ -8,7 +8,7 @@ use iron_api::ServerCreateResponse;
 
 #[derive(Debug, Default)]
 pub struct IronMinecraftServerCreator {
-    pub db: DatabaseConnection,
+    pub db_connection: DatabaseConnection,
 }
 
 #[tonic::async_trait]
@@ -20,8 +20,12 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
     ) -> tonic::Result<Response<ServerCreateResponse>> {
         tracing::info!("creating papermc server");
 
-        return Ok(Response::new(ServerCreateResponse {
-            id: "1".to_string(),
-        }));
+        let response = Response::new(ServerCreateResponse {
+            id: uuid::Uuid::new_v4().to_string(),
+        });
+
+        tracing::info!("{:?}", response);
+
+        return Ok(response);
     }
 }
