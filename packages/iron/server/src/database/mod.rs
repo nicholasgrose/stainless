@@ -33,6 +33,7 @@ pub async fn save_paper_mc_server(
         id: Set(id_string.clone()),
         name: Set(server_definition.name.clone()),
         command: Set("".to_string()),
+        active: Set(server_definition.active),
     }
     .insert(&transaction)
     .await?;

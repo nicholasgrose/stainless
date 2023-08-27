@@ -2,6 +2,7 @@ syntax = "proto3";
 
 message ServerDefinition {
   string name = 1;
+  bool active = 2;
 }
 
 message ServerCreateResponse {

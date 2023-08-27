@@ -31,6 +31,7 @@ impl Migration {
                     )
                     .col(ColumnDef::new(Application::Name).string().not_null())
                     .col(ColumnDef::new(Application::Command).string().not_null())
+                    .col(ColumnDef::new(Application::Active).boolean().not_null())
                     .to_owned(),
             )
             .await
@@ -43,4 +44,5 @@ pub enum Application {
     Id,
     Name,
     Command,
+    Active,
 }

@@ -20,16 +20,10 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
         &self,
         request: Request<PaperMcServerDefinition>,
     ) -> tonic::Result<Response<ServerCreateResponse>> {
-        tracing::info!("creating papermc server");
-
         let id = save_paper_mc_server(&self.db_connection, request.get_ref())
             .await
             .map_err(|err| tonic::Status::from_error(err.into()))?;
 
-        let response = Response::new(ServerCreateResponse { id });
-
-        tracing::info!("{:?}", response);
-
-        return Ok(response);
+        return Ok(Response::new(ServerCreateResponse { id }));
     }
 }
