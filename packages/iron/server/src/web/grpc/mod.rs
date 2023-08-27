@@ -6,6 +6,8 @@ use iron_api::minecraft_service::minecraft_server_creator_server::MinecraftServe
 use iron_api::minecraft_service::PaperMcServerDefinition;
 use iron_api::ServerCreateResponse;
 
+use crate::database::save_paper_mc_server;
+
 #[derive(Debug, Default)]
 pub struct IronMinecraftServerCreator {
     pub db_connection: DatabaseConnection,
@@ -16,13 +18,15 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
     #[instrument]
     async fn create_paper_mc_server(
         &self,
-        _: Request<PaperMcServerDefinition>,
+        request: Request<PaperMcServerDefinition>,
     ) -> tonic::Result<Response<ServerCreateResponse>> {
         tracing::info!("creating papermc server");
 
-        let response = Response::new(ServerCreateResponse {
-            id: uuid::Uuid::new_v4().to_string(),
-        });
+        let id = save_paper_mc_server(&self.db_connection, request.get_ref())
+            .await
+            .map_err(|err| tonic::Status::from_error(err.into()))?;
+
+        let response = Response::new(ServerCreateResponse { id });
 
         tracing::info!("{:?}", response);
 
