@@ -1,8 +1,11 @@
+mod papermc;
+
 use anyhow::Context;
 use sea_orm::ActiveValue::Set;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, TransactionTrait};
 use uuid::Uuid;
 
+use crate::database::papermc::{AikarsFlags, MemoryAmount};
 use entity::application::ActiveModel as Application;
 use entity::minecraft_server::ActiveModel as MinecraftServer;
 use entity::paper_mc_server::ActiveModel as PaperMcServer;
@@ -32,7 +35,10 @@ pub async fn save_paper_mc_server(
     Application {
         id: Set(id_string.clone()),
         name: Set(server_definition.name.clone()),
-        command: Set("".to_string()),
+        command: Set(AikarsFlags {
+            memory: MemoryAmount::Gibibyte(2),
+        }
+        .to_string()),
         active: Set(server_definition.active),
     }
     .insert(&transaction)
