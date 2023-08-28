@@ -4,11 +4,6 @@ import "server.proto";
 
 package minecraft_service;
 
-message MinecraftServerDefinition {
-  ServerDefinition server_definition = 1;
-  string game_version = 2;
-}
-
 message PaperMcServerDefinition {
   MinecraftServerDefinition minecraft_server_definition = 1;
   PaperMcProject project = 2;
@@ -19,4 +14,21 @@ enum PaperMcProject {
   Folia = 1;
   Velocity = 2;
   Waterfall = 3;
+}
+
+message MinecraftServerDefinition {
+  ServerDefinition server_definition = 1;
+  string game_version = 2;
+  optional MemoryAmount memory = 3;
+}
+
+message MemoryAmount {
+  uint64 amount = 1;
+  MemoryUnit unit = 2;
+}
+
+enum MemoryUnit {
+  Gibibytes = 0;
+  Mebibytes = 1;
+  Kibibytes = 2;
 }

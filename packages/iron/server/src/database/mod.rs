@@ -1,15 +1,15 @@
-mod papermc;
-
 use anyhow::Context;
-use sea_orm::ActiveValue::Set;
-use sea_orm::{ActiveModelTrait, DatabaseConnection, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, TransactionTrait};
 use uuid::Uuid;
 
-use crate::database::papermc::{AikarsFlags, MemoryAmount};
 use entity::application::ActiveModel as Application;
 use entity::minecraft_server::ActiveModel as MinecraftServer;
 use entity::paper_mc_server::ActiveModel as PaperMcServer;
 use iron_api::minecraft_service::{PaperMcProject, PaperMcServerDefinition};
+
+use crate::database::papermc::AikarsFlags;
+
+mod papermc;
 
 pub async fn save_paper_mc_server(
     db: &DatabaseConnection,
@@ -35,10 +35,7 @@ pub async fn save_paper_mc_server(
     Application {
         id: Set(id_string.clone()),
         name: Set(server_definition.name.clone()),
-        command: Set(AikarsFlags {
-            memory: MemoryAmount::Gibibyte(2),
-        }
-        .to_string()),
+        command: Set(AikarsFlags::try_from(minecraft_server_definition)?.to_string()),
         active: Set(server_definition.active),
     }
     .insert(&transaction)
