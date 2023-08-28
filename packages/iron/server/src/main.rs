@@ -5,6 +5,7 @@ use web::start_server;
 
 mod config;
 mod database;
+mod manager;
 mod web;
 
 #[tokio::main]

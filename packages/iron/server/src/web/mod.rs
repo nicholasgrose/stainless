@@ -8,12 +8,15 @@ use tower::ServiceBuilder;
 use iron_api::minecraft_service::minecraft_server_creator_server::MinecraftServerCreatorServer;
 
 use crate::config::IronConfig;
+use crate::manager::ApplicationManager;
 use crate::web::grpc::IronMinecraftServerCreator;
 
 mod grpc;
 
 pub async fn start_server(config: IronConfig) -> anyhow::Result<()> {
     let db_connection = Database::connect(&config.database_uri).await?;
+    let app_manager = ApplicationManager::default();
+
     let tls_config = load_tls_config(&config).await?;
     let middleware = ServiceBuilder::new()
         .load_shed()
@@ -24,7 +27,10 @@ pub async fn start_server(config: IronConfig) -> anyhow::Result<()> {
         .trace_fn(|_| tracing::info_span!("iron_server"))
         .layer(middleware)
         .add_service(MinecraftServerCreatorServer::new(
-            IronMinecraftServerCreator { db_connection },
+            IronMinecraftServerCreator {
+                db_connection,
+                app_manager: app_manager.into(),
+            },
         ))
         .serve(config.address)
         .await

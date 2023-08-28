@@ -14,7 +14,7 @@ mod papermc;
 pub async fn save_paper_mc_server(
     db: &DatabaseConnection,
     papermc_definition: &PaperMcServerDefinition,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<crate::manager::Application> {
     let minecraft_server_definition = papermc_definition
         .minecraft_server_definition
         .as_ref()
@@ -27,29 +27,29 @@ pub async fn save_paper_mc_server(
     let paper_mc_project = PaperMcProject::from_i32(papermc_definition.project)
         .with_context(|| "invalid paper mc project provided")?;
 
-    let new_server_id = Uuid::new_v4();
-    let id_string = new_server_id.to_string();
+    let id = Uuid::new_v4();
+    let command = AikarsFlags::try_from(minecraft_server_definition)?.to_string();
 
     let transaction = db.begin().await?;
 
     Application {
-        id: Set(id_string.clone()),
+        id: Set(id.to_string()),
         name: Set(server_definition.name.clone()),
-        command: Set(AikarsFlags::try_from(minecraft_server_definition)?.to_string()),
+        command: Set(command.clone()),
         active: Set(server_definition.active),
     }
     .insert(&transaction)
     .await?;
 
     MinecraftServer {
-        id: Set(id_string.clone()),
+        id: Set(id.to_string()),
         game_version: Set(minecraft_server_definition.game_version.clone()),
     }
     .insert(&transaction)
     .await?;
 
     PaperMcServer {
-        id: Set(id_string.clone()),
+        id: Set(id.to_string()),
         project: Set(paper_mc_project.as_str_name().to_string()),
         build: Set(0),
         build_update_off: Set(false),
@@ -59,5 +59,9 @@ pub async fn save_paper_mc_server(
 
     transaction.commit().await?;
 
-    Ok(new_server_id.to_string())
+    Ok(crate::manager::Application {
+        id,
+        name: server_definition.name.clone(),
+        command,
+    })
 }
