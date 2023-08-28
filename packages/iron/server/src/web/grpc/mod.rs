@@ -1,7 +1,8 @@
 use sea_orm::DatabaseConnection;
 use tokio::sync::RwLock;
 use tonic::{Request, Response};
-use tracing::instrument;
+use tracing::{info, instrument};
+use uuid::Uuid;
 
 use iron_api::minecraft_service::minecraft_server_creator_server::MinecraftServerCreator;
 use iron_api::minecraft_service::PaperMcServerDefinition;
@@ -23,10 +24,12 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
         &self,
         request: Request<PaperMcServerDefinition>,
     ) -> tonic::Result<Response<ServerCreateResponse>> {
-        let application = save_paper_mc_server(&self.db_connection, request.get_ref())
+        let id = Uuid::new_v4();
+        info!("creating server {}", id);
+
+        let application = save_paper_mc_server(&self.db_connection, id, request.get_ref())
             .await
             .map_err(|err| tonic::Status::from_error(err.into()))?;
-        let id = application.id;
 
         self.app_manager
             .write()

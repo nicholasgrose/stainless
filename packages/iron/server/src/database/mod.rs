@@ -1,5 +1,6 @@
 use anyhow::Context;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, TransactionTrait};
+use tracing::{info, instrument};
 use uuid::Uuid;
 
 use entity::application::ActiveModel as Application;
@@ -11,10 +12,14 @@ use crate::database::papermc::AikarsFlags;
 
 mod papermc;
 
+#[instrument]
 pub async fn save_paper_mc_server(
     db: &DatabaseConnection,
+    id: Uuid,
     papermc_definition: &PaperMcServerDefinition,
 ) -> anyhow::Result<crate::manager::Application> {
+    info!("saving to database");
+
     let minecraft_server_definition = papermc_definition
         .minecraft_server_definition
         .as_ref()
@@ -27,7 +32,6 @@ pub async fn save_paper_mc_server(
     let paper_mc_project = PaperMcProject::from_i32(papermc_definition.project)
         .with_context(|| "invalid paper mc project provided")?;
 
-    let id = Uuid::new_v4();
     let command = AikarsFlags::try_from(minecraft_server_definition)?.to_string();
 
     let transaction = db.begin().await?;
