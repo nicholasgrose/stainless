@@ -12,8 +12,8 @@ mod web;
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
-    let config = IronConfig::load().unwrap_or_default();
-    tracing::info!("{:?}", config);
+    let config = IronConfig::default();
+    tracing::info!("using config {:?}", config);
 
     start_server(config).await
 }
