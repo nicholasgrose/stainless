@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 entity = { path = "../../database/entity" }
+http = "0.2"
 iron_api = { path = "../api" }
 sea-orm = { version = "0", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print", "with-uuid", "with-chrono"] }
 tokio = { version = "1.32", features = ["full"] }

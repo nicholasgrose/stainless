@@ -1,5 +1,4 @@
 use sea_orm::DatabaseConnection;
-use tokio::sync::RwLock;
 use tonic::{Request, Response};
 use tracing::{info, instrument};
 use uuid::Uuid;
@@ -14,7 +13,7 @@ use crate::manager::ApplicationManager;
 #[derive(Debug)]
 pub struct IronMinecraftServerCreator {
     pub db_connection: DatabaseConnection,
-    pub app_manager: RwLock<ApplicationManager>,
+    pub app_manager: ApplicationManager,
 }
 
 #[tonic::async_trait]
@@ -32,8 +31,6 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
             .map_err(|err| tonic::Status::from_error(err.into()))?;
 
         self.app_manager
-            .write()
-            .await
             .start_application(application)
             .await
             .map_err(|err| tonic::Status::from_error(err.into()))?;
