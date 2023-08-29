@@ -26,6 +26,7 @@ impl ApplicationManager {
 
         let application_id = application.id;
         let active_app = application.start().await?;
+
         self.active_application
             .write()
             .await
@@ -53,7 +54,7 @@ impl Application {
     async fn start(self) -> anyhow::Result<ActiveApplication> {
         let (sender, receiver) = tokio::sync::mpsc::channel(100);
         let app_process = self.execute().await?;
-        let app_task = self.create_app_task(app_process, receiver);
+        let app_task = self.create_process_control_task(app_process, receiver);
 
         Ok(ActiveApplication {
             application: self,
@@ -84,7 +85,7 @@ impl Application {
         format!("{}_{}", self.name, self.id).into()
     }
 
-    fn create_app_task(
+    fn create_process_control_task(
         &self,
         app_process: Child,
         receiver: Receiver<u8>,

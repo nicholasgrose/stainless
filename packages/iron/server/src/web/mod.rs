@@ -98,9 +98,9 @@ impl IronGrpcService {
     }
 
     async fn load_tls_config(&self) -> anyhow::Result<ServerTlsConfig> {
-        let certificate = tokio::fs::read(&self.tls.certificate_file_path);
-        let key = tokio::fs::read(&self.tls.key_file_path);
-        let server_identity = Identity::from_pem(certificate.await?, key.await?);
+        let certificate = tokio::fs::read(&self.tls.certificate_file_path).await?;
+        let key = tokio::fs::read(&self.tls.key_file_path).await?;
+        let server_identity = Identity::from_pem(certificate, key);
 
         Ok(ServerTlsConfig::new().identity(server_identity))
     }
