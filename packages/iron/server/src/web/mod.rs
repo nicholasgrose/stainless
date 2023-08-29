@@ -16,10 +16,11 @@ use tracing::{info, instrument};
 
 use iron_api::minecraft_service::minecraft_server_creator_server::MinecraftServerCreatorServer;
 
+use crate::database::IronDatabase;
 use crate::manager::ApplicationManager;
-use crate::web::grpc::IronMinecraftServerCreator;
+use crate::web::grpc::minecraft::IronMinecraftServerCreator;
 
-mod grpc;
+pub mod grpc;
 
 #[derive(Debug)]
 pub struct IronGrpcService {
@@ -76,7 +77,7 @@ impl IronGrpcService {
     pub async fn start(&self) -> anyhow::Result<()> {
         info!("starting grpc service");
 
-        let db_connection = Database::connect(self.database_uri.to_string()).await?;
+        let db = IronDatabase::from(Database::connect(self.database_uri.to_string()).await?);
         let app_manager = ApplicationManager::default();
 
         let tls_config = self.load_tls_config().await?;
@@ -89,10 +90,7 @@ impl IronGrpcService {
             .trace_fn(|_| tracing::info_span!("iron_server"))
             .layer(middleware)
             .add_service(MinecraftServerCreatorServer::new(
-                IronMinecraftServerCreator {
-                    db_connection,
-                    app_manager,
-                },
+                IronMinecraftServerCreator { db, app_manager },
             ))
             .serve(self.address)
             .await

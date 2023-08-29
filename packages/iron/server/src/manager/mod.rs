@@ -16,20 +16,20 @@ use uuid::Uuid;
 
 #[derive(Debug, Default)]
 pub struct ApplicationManager {
-    active_servers: RwLock<HashMap<Uuid, ActiveApplication>>,
+    active_application: RwLock<HashMap<Uuid, ActiveApplication>>,
 }
 
 impl ApplicationManager {
-    #[instrument]
-    pub async fn start_application(&self, application: Application) -> anyhow::Result<()> {
+    #[instrument(skip(self))]
+    pub async fn execute_new(&self, application: Application) -> anyhow::Result<()> {
         info!("starting application");
 
         let application_id = application.id;
-        let server = application.start().await?;
-        self.active_servers
+        let active_app = application.start().await?;
+        self.active_application
             .write()
             .await
-            .insert(application_id, server);
+            .insert(application_id, active_app);
 
         Ok(())
     }
@@ -53,25 +53,7 @@ impl Application {
     async fn start(self) -> anyhow::Result<ActiveApplication> {
         let (sender, receiver) = tokio::sync::mpsc::channel(100);
         let app_process = self.execute().await?;
-        let app_task = tokio::spawn(async move {
-            let span = span!(Level::INFO, "app task", "uuid" = self.id.to_string());
-            let _enter = span.enter();
-            info!("starting task");
-
-            let execution_result = attach_receiver_to_process(receiver, app_process).await;
-            let _enter = span.enter();
-
-            match &execution_result {
-                Ok(status) => {
-                    info!("task exited with {}", status)
-                }
-                Err(error) => {
-                    info!("task failed with {}", error)
-                }
-            }
-
-            execution_result
-        });
+        let app_task = self.create_app_task(app_process, receiver);
 
         Ok(ActiveApplication {
             application: self,
@@ -100,6 +82,34 @@ impl Application {
 
     fn working_directory(&self) -> PathBuf {
         format!("{}_{}", self.name, self.id).into()
+    }
+
+    fn create_app_task(
+        &self,
+        app_process: Child,
+        receiver: Receiver<u8>,
+    ) -> JoinHandle<anyhow::Result<ExitStatus>> {
+        let id = self.id.to_string();
+
+        tokio::spawn(async move {
+            let span = span!(Level::INFO, "app task", "uuid" = id);
+            let _enter = span.enter();
+            info!("starting task");
+
+            let execution_result = attach_receiver_to_process(receiver, app_process).await;
+            let _enter = span.enter();
+
+            match &execution_result {
+                Ok(status) => {
+                    info!("task exited with {}", status)
+                }
+                Err(error) => {
+                    info!("task failed with {}", error)
+                }
+            }
+
+            execution_result
+        })
     }
 }
 

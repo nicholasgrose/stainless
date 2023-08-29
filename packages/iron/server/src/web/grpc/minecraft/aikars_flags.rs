@@ -1,6 +1,8 @@
-use anyhow::Context;
-use iron_api::minecraft_service::{MemoryUnit, MinecraftServerDefinition};
 use std::fmt::{Display, Formatter};
+
+use anyhow::Context;
+
+use iron_api::minecraft_service::{MemoryUnit, MinecraftServerDefinition};
 
 pub enum MemoryAmount {
     Gibibytes(u64),

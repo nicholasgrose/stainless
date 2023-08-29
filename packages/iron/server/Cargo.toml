@@ -10,6 +10,7 @@ anyhow = "1.0"
 entity = { path = "../../database/entity" }
 http = "0.2"
 iron_api = { path = "../api" }
+prost = "0.11"
 sea-orm = { version = "0", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print", "with-uuid", "with-chrono"] }
 tokio = { version = "1.32", features = ["full"] }
 tonic = { version = "0.9", features = ["tls"] }
