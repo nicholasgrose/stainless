@@ -36,31 +36,21 @@ fn create_app_process_task(
     let task_lock = app_lock.clone();
 
     tokio::spawn(async move {
-        let result = broadcast_event(
-            &task_lock,
-            AppEvent::Start {
-                application: task_lock.clone(),
-            },
-        )
-        .await;
-
-        if let Err(e) = result {
-            return Arc::new(Err(e));
+        let app_event = AppEvent::Start {
+            application: task_lock.clone(),
+        };
+        if let Err(e) = broadcast_event(&task_lock, app_event).await {
+            return e;
         }
 
         let execution_result = Arc::new(attach_receiver_to_process(receiver, app_process).await);
 
-        let result = broadcast_event(
-            &task_lock,
-            AppEvent::End {
-                application: task_lock.clone(),
-                result: execution_result.clone(),
-            },
-        )
-        .await;
-
-        if let Err(e) = result {
-            return Arc::new(Err(e));
+        let app_event = AppEvent::End {
+            application: task_lock.clone(),
+            result: execution_result.clone(),
+        };
+        if let Err(e) = broadcast_event(&task_lock, app_event).await {
+            return e;
         }
 
         execution_result
@@ -70,13 +60,14 @@ fn create_app_process_task(
 async fn broadcast_event(
     app_lock: &Arc<RwLock<Application>>,
     event: AppEvent,
-) -> anyhow::Result<usize> {
+) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
     app_lock
         .read()
         .await
         .events
         .send(event)
         .context("failed to broadcast app process event")
+        .map_err(|e| Arc::new(Err(e)))
 }
 
 pub async fn attach_receiver_to_process(
