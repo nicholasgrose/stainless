@@ -4,13 +4,11 @@ use std::fmt::{Debug, Display};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::time::Duration;
 
 use anyhow::Context;
 use http::Uri;
 use sea_orm::Database;
 use tonic::transport::{Identity, Server, ServerTlsConfig};
-use tower::ServiceBuilder;
 use tracing::warn;
 use tracing::{info, instrument};
 
@@ -88,16 +86,11 @@ impl IronGrpcService {
 
         let db = IronDatabase::from(Database::connect(self.database_uri.to_string()).await?).into();
         let app_manager = ApplicationManager::default().into();
-
         let tls_config = self.load_tls_config().await?;
-        let middleware = ServiceBuilder::new()
-            .load_shed()
-            .timeout(Duration::from_secs(10));
 
         Server::builder()
             .tls_config(tls_config)?
             .trace_fn(|_| tracing::info_span!("iron_server"))
-            .layer(middleware)
             .add_service(MinecraftServerCreatorServer::new(
                 IronMinecraftServerCreator { db, app_manager },
             ))

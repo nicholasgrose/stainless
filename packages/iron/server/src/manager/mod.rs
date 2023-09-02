@@ -20,22 +20,40 @@ pub struct ApplicationManager {
 }
 
 impl ApplicationManager {
-    #[instrument(skip(self))]
-    pub async fn execute_new(&self, app_settings: AppCreationSettings) -> anyhow::Result<()> {
-        info!("starting application");
+    pub async fn add(&self, app: Application) -> Option<Arc<RwLock<Application>>> {
+        let app_id = app.properties.id;
+        let thread_safe_app = RwLock::new(app).into();
 
-        let app_id = app_settings.properties.id;
-        let app = Application::new(app_settings);
-        app.subscribe_dispatcher(Box::<ManagerDispatcher>::default());
-
-        let mut apps = self.applications.write().await;
-
-        apps.insert(app_id, RwLock::new(app).into());
-
-        if let Some(app) = apps.get(&app_id) {
-            start(app).await?;
-        }
-
-        Ok(())
+        self.applications
+            .write()
+            .await
+            .insert(app_id, thread_safe_app)
     }
+
+    pub async fn remove(&self, app_id: &Uuid) -> Option<Arc<RwLock<Application>>> {
+        self.applications.write().await.remove(app_id)
+    }
+}
+
+#[instrument]
+pub async fn execute_new(
+    manager: &Arc<ApplicationManager>,
+    app_settings: AppCreationSettings,
+) -> anyhow::Result<()> {
+    info!("starting application");
+
+    let app_id = app_settings.properties.id;
+    let app = Application::new(app_settings);
+    app.subscribe_dispatcher(Box::new(ManagerDispatcher {
+        manager: manager.clone(),
+    }));
+
+    manager.add(app).await;
+
+    let apps = manager.applications.read().await;
+    if let Some(app) = apps.get(&app_id) {
+        start(app).await?;
+    }
+
+    Ok(())
 }

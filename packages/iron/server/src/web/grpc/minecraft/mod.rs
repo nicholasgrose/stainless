@@ -11,7 +11,7 @@ use iron_api::ServerCreateResponse;
 
 use crate::database::insert::InsertModel;
 use crate::database::IronDatabase;
-use crate::manager::ApplicationManager;
+use crate::manager::{execute_new, ApplicationManager};
 use crate::web::grpc::{to_tonic_status, AppCreateContext};
 
 mod aikars_flags;
@@ -36,8 +36,7 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
         info!("creating server {:?}", context);
 
         self.db.insert(&context).await.map_err(to_tonic_status)?;
-        self.app_manager
-            .execute_new(context.application)
+        execute_new(&self.app_manager, context.application)
             .await
             .map_err(to_tonic_status)?;
 
