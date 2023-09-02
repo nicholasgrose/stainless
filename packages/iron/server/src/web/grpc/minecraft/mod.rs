@@ -43,11 +43,11 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
     }
 }
 
-impl<T> InsertModel<MinecraftServerModel, AppCreateContext<T>> for MinecraftServerDefinition
+impl<M> InsertModel<MinecraftServerModel, AppCreateContext<M>> for MinecraftServerDefinition
 where
-    T: prost::Message,
+    M: prost::Message,
 {
-    fn build_model(&self, context: &AppCreateContext<T>) -> anyhow::Result<MinecraftServerModel> {
+    fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<MinecraftServerModel> {
         Ok(MinecraftServerModel {
             id: Set(context.application.id.to_string()),
             game_version: Set(self.game_version.clone()),

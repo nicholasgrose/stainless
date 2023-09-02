@@ -7,9 +7,26 @@ use entity::paper_mc_server::ActiveModel as PaperMcServerModel;
 use iron_api::minecraft_service::{PaperMcProject, PaperMcServerDefinition};
 
 use crate::database::insert::{Insert, InsertModel};
-use crate::manager::Application;
+use crate::manager::app::events::{AppEvent, AppEventDispatcher};
+use crate::manager::app::ApplicationSettings;
 use crate::web::grpc::minecraft::aikars_flags::AikarsFlags;
 use crate::web::grpc::AppCreateContext;
+
+#[derive(Default, Debug)]
+pub struct PaperMcDispatcher;
+
+#[async_trait]
+impl AppEventDispatcher for PaperMcDispatcher {
+    async fn dispatch<'a>(&self, _event: AppEvent<'a>) -> anyhow::Result<()> {
+        Ok(())
+    }
+}
+
+impl AsRef<Self> for PaperMcDispatcher {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
 
 impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefinition> {
     type Error = anyhow::Error;
@@ -20,10 +37,11 @@ impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefiniti
         let server_definition = required_def!(minecraft_server_definition.server_definition)?;
 
         Ok(AppCreateContext {
-            application: Application {
+            application: ApplicationSettings {
                 id: Uuid::new_v4(),
                 name: server_definition.name.clone(),
                 command: AikarsFlags::try_from(minecraft_server_definition)?.to_string(),
+                event_handlers: vec![Box::new(PaperMcDispatcher::default())],
             },
             message: papermc_definition,
         })
@@ -52,11 +70,11 @@ impl Insert for AppCreateContext<PaperMcServerDefinition> {
     }
 }
 
-impl<T> InsertModel<PaperMcServerModel, AppCreateContext<T>> for PaperMcServerDefinition
+impl<M> InsertModel<PaperMcServerModel, AppCreateContext<M>> for PaperMcServerDefinition
 where
-    T: prost::Message,
+    M: prost::Message,
 {
-    fn build_model(&self, context: &AppCreateContext<T>) -> anyhow::Result<PaperMcServerModel> {
+    fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<PaperMcServerModel> {
         let paper_mc_project = PaperMcProject::from_i32(self.project)
             .with_context(|| "invalid paper mc project provided")?;
 

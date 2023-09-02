@@ -59,15 +59,15 @@ where
     T::Err: Error + Send + Sync + 'static,
 {
     env::var(name)
-        .with_context(|| "env var is missing")
-        .and_then(|value| value.parse().with_context(|| "env var is set but invalid"))
+        .context("env var is missing")
+        .and_then(|value| value.parse().context("env var is set but invalid"))
         .or_else(|error| {
             warn!("falling back to default value due to {}", error);
 
-            default
-                .into()
-                .parse()
-                .with_context(|| format!("parsing failed for default value of env var {}", name))
+            default.into().parse().context(format!(
+                "parsing failed for default value of env var {}",
+                name
+            ))
         })
         .unwrap()
 }

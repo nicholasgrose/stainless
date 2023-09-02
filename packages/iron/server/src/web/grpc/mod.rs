@@ -7,28 +7,28 @@ use entity::application::ActiveModel as ApplicationModel;
 use iron_api::ServerDefinition;
 
 use crate::database::insert::InsertModel;
-use crate::manager::Application;
+use crate::manager::app::ApplicationSettings;
 
 pub mod minecraft;
 
 #[derive(Debug)]
-pub struct AppCreateContext<T>
+pub struct AppCreateContext<M>
 where
-    T: Message,
+    M: Message,
 {
-    pub application: Application,
-    pub message: T,
+    pub application: ApplicationSettings,
+    pub message: M,
 }
 
 fn to_tonic_status(err: anyhow::Error) -> tonic::Status {
     tonic::Status::from_error(err.into())
 }
 
-impl<T> InsertModel<ApplicationModel, AppCreateContext<T>> for ServerDefinition
+impl<M> InsertModel<ApplicationModel, AppCreateContext<M>> for ServerDefinition
 where
-    T: prost::Message,
+    M: prost::Message,
 {
-    fn build_model(&self, context: &AppCreateContext<T>) -> anyhow::Result<ApplicationModel> {
+    fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<ApplicationModel> {
         Ok(ApplicationModel {
             id: Set(context.application.id.to_string()),
             name: Set(self.name.clone()),
