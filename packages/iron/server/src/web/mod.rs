@@ -86,8 +86,8 @@ impl IronGrpcService {
     pub async fn start(&self) -> anyhow::Result<()> {
         info!("starting grpc service");
 
-        let db = IronDatabase::from(Database::connect(self.database_uri.to_string()).await?);
-        let app_manager = ApplicationManager::default();
+        let db = IronDatabase::from(Database::connect(self.database_uri.to_string()).await?).into();
+        let app_manager = ApplicationManager::default().into();
 
         let tls_config = self.load_tls_config().await?;
         let middleware = ServiceBuilder::new()

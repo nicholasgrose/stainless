@@ -8,7 +8,7 @@ use iron_api::minecraft_service::{PaperMcProject, PaperMcServerDefinition};
 
 use crate::database::insert::{Insert, InsertModel};
 use crate::manager::app::events::{AppEvent, AppEventDispatcher};
-use crate::manager::app::ApplicationSettings;
+use crate::manager::app::{AppCreationSettings, AppProperties};
 use crate::web::grpc::minecraft::aikars_flags::AikarsFlags;
 use crate::web::grpc::AppCreateContext;
 
@@ -17,7 +17,7 @@ pub struct PaperMcDispatcher;
 
 #[async_trait]
 impl AppEventDispatcher for PaperMcDispatcher {
-    async fn dispatch<'a>(&self, _event: AppEvent<'a>) -> anyhow::Result<()> {
+    async fn dispatch(&self, _event: AppEvent) -> anyhow::Result<()> {
         Ok(())
     }
 }
@@ -37,11 +37,13 @@ impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefiniti
         let server_definition = required_def!(minecraft_server_definition.server_definition)?;
 
         Ok(AppCreateContext {
-            application: ApplicationSettings {
-                id: Uuid::new_v4(),
-                name: server_definition.name.clone(),
-                command: AikarsFlags::try_from(minecraft_server_definition)?.to_string(),
-                event_handlers: vec![Box::<PaperMcDispatcher>::default()],
+            application: AppCreationSettings {
+                properties: AppProperties {
+                    id: Uuid::new_v4(),
+                    name: server_definition.name.clone(),
+                    command: AikarsFlags::try_from(minecraft_server_definition)?.to_string(),
+                },
+                startup_handlers: vec![Box::<PaperMcDispatcher>::default()],
             },
             message: papermc_definition,
         })
@@ -79,7 +81,7 @@ where
             PaperMcProject::try_from(self.project).context("invalid paper mc project provided")?;
 
         Ok(PaperMcServerModel {
-            id: Set(context.application.id.to_string()),
+            id: Set(context.application.properties.id.to_string()),
             project: Set(paper_mc_project.as_str_name().to_string()),
             build: Set(0),
             build_update_off: Set(false),

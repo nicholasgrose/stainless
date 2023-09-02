@@ -7,7 +7,7 @@ use entity::application::ActiveModel as ApplicationModel;
 use iron_api::ServerDefinition;
 
 use crate::database::insert::InsertModel;
-use crate::manager::app::ApplicationSettings;
+use crate::manager::app::AppCreationSettings;
 
 pub mod minecraft;
 
@@ -16,7 +16,7 @@ pub struct AppCreateContext<M>
 where
     M: Message,
 {
-    pub application: ApplicationSettings,
+    pub application: AppCreationSettings,
     pub message: M,
 }
 
@@ -30,9 +30,9 @@ where
 {
     fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<ApplicationModel> {
         Ok(ApplicationModel {
-            id: Set(context.application.id.to_string()),
+            id: Set(context.application.properties.id.to_string()),
             name: Set(self.name.clone()),
-            command: Set(context.application.command.clone()),
+            command: Set(context.application.properties.command.clone()),
             active: Set(self.active),
         })
     }

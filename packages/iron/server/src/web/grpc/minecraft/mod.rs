@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use sea_orm::Set;
 use tonic::{Request, Response};
 use tracing::{info, instrument};
@@ -17,8 +19,8 @@ pub mod papermc;
 
 #[derive(Debug)]
 pub struct IronMinecraftServerCreator {
-    pub db: IronDatabase,
-    pub app_manager: ApplicationManager,
+    pub db: Arc<IronDatabase>,
+    pub app_manager: Arc<ApplicationManager>,
 }
 
 #[tonic::async_trait]
@@ -29,7 +31,7 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
         request: Request<PaperMcServerDefinition>,
     ) -> tonic::Result<Response<ServerCreateResponse>> {
         let context = AppCreateContext::try_from(request.into_inner()).map_err(to_tonic_status)?;
-        let id = context.application.id;
+        let id = context.application.properties.id;
 
         info!("creating server {:?}", context);
 
@@ -49,7 +51,7 @@ where
 {
     fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<MinecraftServerModel> {
         Ok(MinecraftServerModel {
-            id: Set(context.application.id.to_string()),
+            id: Set(context.application.properties.id.to_string()),
             game_version: Set(self.game_version.clone()),
         })
     }

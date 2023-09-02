@@ -1,69 +1,80 @@
 use std::path::PathBuf;
 use std::process::{ExitStatus, Stdio};
+use std::sync::Arc;
 
-use anyhow::anyhow;
-use anyhow::Context;
 use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
 use tokio::process::{Child, Command};
-use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::broadcast;
+use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use tokio::{pin, select};
-use tracing::{info, span, Level};
 use uuid::Uuid;
 
-use crate::manager::app::events::AppEventDispatcher;
+use crate::manager::app::events::{AppEvent, AppEventDispatcher};
+use crate::manager::log_dispatcher::LogDispatcher;
 
+pub mod control;
 pub mod events;
 
 #[derive(Debug)]
-pub struct Application {
-    pub settings: ApplicationSettings,
-    pub state: ApplicationState,
+pub struct AppCreationSettings {
+    pub properties: AppProperties,
+    pub startup_handlers: Vec<Box<dyn AppEventDispatcher>>,
 }
 
 #[derive(Debug)]
-pub struct ApplicationSettings {
+pub struct Application {
+    pub properties: AppProperties,
+    pub state: ApplicationState,
+    pub events: broadcast::Sender<AppEvent>,
+}
+
+#[derive(Debug)]
+pub struct AppProperties {
     pub id: Uuid,
     pub name: String,
     pub command: String,
-    pub event_handlers: Vec<Box<dyn AppEventDispatcher>>,
 }
 
 #[derive(Debug)]
 pub enum ApplicationState {
     Inactive,
     Active {
-        app_task: JoinHandle<anyhow::Result<ExitStatus>>,
-        input_sender: Sender<u8>,
+        app_task: JoinHandle<Arc<anyhow::Result<ExitStatus>>>,
+        input_sender: mpsc::Sender<u8>,
     },
 }
 
 impl Application {
-    pub(crate) fn new(settings: ApplicationSettings) -> Self {
-        Application {
-            settings,
+    pub fn new(settings: AppCreationSettings) -> Self {
+        let (sender, receiver) = broadcast::channel(4);
+        let app = Application {
+            properties: settings.properties,
             state: ApplicationState::Inactive,
-        }
-    }
-
-    pub async fn start(&mut self) -> anyhow::Result<()> {
-        let (sender, receiver) = tokio::sync::mpsc::channel(100);
-        let app_process = self.execute().await?;
-        let app_task = self.create_process_control_task(app_process, receiver);
-
-        self.state = ApplicationState::Active {
-            app_task,
-            input_sender: sender,
+            events: sender,
         };
 
-        Ok(())
+        attach_receiver_to_dispatcher(receiver, Box::new(LogDispatcher::new(&app.properties.id)));
+
+        for handler in settings.startup_handlers {
+            app.subscribe_dispatcher(handler);
+        }
+
+        app
+    }
+
+    pub fn subscribe_dispatcher(
+        &self,
+        dispatcher: Box<dyn AppEventDispatcher>,
+    ) -> JoinHandle<anyhow::Result<()>> {
+        let receiver = self.events.subscribe();
+
+        attach_receiver_to_dispatcher(receiver, dispatcher)
     }
 
     async fn execute(&self) -> anyhow::Result<Child> {
         let working_directory = self.working_directory().await?;
         let log_file = File::create(working_directory.join("application.log")).await?;
-        let command_args: Vec<&str> = self.settings.command.split(' ').collect();
+        let command_args: Vec<&str> = self.properties.command.split(' ').collect();
 
         Ok(Command::new(command_args[0])
             .args(&command_args[1..])
@@ -75,64 +86,22 @@ impl Application {
     }
 
     async fn working_directory(&self) -> anyhow::Result<PathBuf> {
-        let settings = &self.settings;
+        let settings = &self.properties;
         let path = format!("{}_{}", settings.name, settings.id).into();
         tokio::fs::create_dir_all(&path).await?;
 
         Ok(path)
     }
-
-    fn create_process_control_task(
-        &self,
-        app_process: Child,
-        receiver: Receiver<u8>,
-    ) -> JoinHandle<anyhow::Result<ExitStatus>> {
-        let id = self.settings.id.to_string();
-
-        tokio::spawn(async move {
-            let span = span!(Level::INFO, "app task", "uuid" = id);
-            let _enter = span.enter();
-            info!("starting task");
-
-            let execution_result = attach_receiver_to_process(receiver, app_process).await;
-            let _enter = span.enter();
-
-            match &execution_result {
-                Ok(status) => {
-                    info!("task exited with {}", status)
-                }
-                Err(error) => {
-                    info!("task failed with {}", error)
-                }
-            }
-
-            execution_result
-        })
-    }
 }
 
-async fn attach_receiver_to_process(
-    mut receiver: Receiver<u8>,
-    mut process: Child,
-) -> anyhow::Result<ExitStatus> {
-    let mut child_in = process
-        .stdin
-        .take()
-        .context("new application process lacks stdin")?;
-    let application_task = process.wait();
-    pin!(application_task);
-
-    loop {
-        select! {
-            receive_result = receiver.recv() => {
-                match receive_result {
-                    Some(byte) => child_in.write_u8(byte).await?,
-                    None => return Err(anyhow!("input channel broke"))
-                }
-            }
-            application_result = &mut application_task => {
-                return application_result.context("error occurred running application")
-            }
+fn attach_receiver_to_dispatcher(
+    mut receiver: broadcast::Receiver<AppEvent>,
+    dispatcher: Box<dyn AppEventDispatcher>,
+) -> JoinHandle<anyhow::Result<()>> {
+    tokio::spawn(async move {
+        loop {
+            let event = receiver.recv().await?;
+            dispatcher.dispatch(event).await?;
         }
-    }
+    })
 }
