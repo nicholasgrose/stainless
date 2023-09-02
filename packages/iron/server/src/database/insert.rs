@@ -20,7 +20,7 @@ where
 }
 
 impl IronDatabase {
-    #[instrument]
+    #[instrument(skip(self))]
     pub async fn insert(&self, value: &impl Insert) -> anyhow::Result<()> {
         info!("inserting new entry");
 
