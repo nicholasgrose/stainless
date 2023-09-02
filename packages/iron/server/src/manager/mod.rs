@@ -28,11 +28,11 @@ impl ApplicationManager {
         let app = Application::new(app_settings);
         app.subscribe_dispatcher(Box::<ManagerDispatcher>::default());
 
-        self.applications
-            .write()
-            .await
-            .insert(app_id, RwLock::new(app).into());
-        if let Some(app) = self.applications.read().await.get(&app_id) {
+        let mut apps = self.applications.write().await;
+
+        apps.insert(app_id, RwLock::new(app).into());
+
+        if let Some(app) = apps.get(&app_id) {
             start(app).await?;
         }
 

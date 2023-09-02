@@ -14,13 +14,13 @@ use crate::manager::app::events::AppEvent;
 use crate::manager::app::{Application, ApplicationState};
 
 pub async fn start(app_lock: &Arc<RwLock<Application>>) -> anyhow::Result<()> {
-    let app = app_lock.read().await;
+    let mut app = app_lock.write().await;
 
     let (sender, receiver) = tokio::sync::mpsc::channel(100);
     let app_process = app.execute().await?;
-    let app_task = create_app_process_task(&app_lock, app_process, receiver);
+    let app_task = create_app_process_task(app_lock, app_process, receiver);
 
-    app_lock.write().await.state = ApplicationState::Active {
+    app.state = ApplicationState::Active {
         app_task,
         input_sender: sender,
     };
