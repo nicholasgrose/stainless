@@ -12,7 +12,7 @@ use tokio::{pin, select};
 use tracing::{info, span, Level};
 use uuid::Uuid;
 
-use crate::manager::app::events::{AppEvent, AppEventDispatcher};
+use crate::manager::app::events::AppEventDispatcher;
 
 pub mod events;
 
@@ -131,7 +131,7 @@ async fn attach_receiver_to_process(
                 }
             }
             application_result = &mut application_task => {
-                return application_result.with_context(|| "error occurred running application")
+                return application_result.context("error occurred running application")
             }
         }
     }

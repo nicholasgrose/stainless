@@ -20,6 +20,15 @@ use crate::database::IronDatabase;
 use crate::manager::ApplicationManager;
 use crate::web::grpc::minecraft::IronMinecraftServerCreator;
 
+macro_rules! required_def {
+    ($message:expr) => {
+        $message.as_ref().context(format!(
+            "required definition not provided: {}",
+            stringify!($message)
+        ))
+    };
+}
+
 pub mod grpc;
 
 #[derive(Debug)]
@@ -94,7 +103,7 @@ impl IronGrpcService {
             ))
             .serve(self.address)
             .await
-            .with_context(|| "Server experienced an error during execution")
+            .context("server experienced an error during execution")
     }
 
     async fn load_tls_config(&self) -> anyhow::Result<ServerTlsConfig> {

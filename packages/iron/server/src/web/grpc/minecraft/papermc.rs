@@ -41,7 +41,7 @@ impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefiniti
                 id: Uuid::new_v4(),
                 name: server_definition.name.clone(),
                 command: AikarsFlags::try_from(minecraft_server_definition)?.to_string(),
-                event_handlers: vec![Box::new(PaperMcDispatcher::default())],
+                event_handlers: vec![Box::<PaperMcDispatcher>::default()],
             },
             message: papermc_definition,
         })
@@ -75,8 +75,8 @@ where
     M: prost::Message,
 {
     fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<PaperMcServerModel> {
-        let paper_mc_project = PaperMcProject::from_i32(self.project)
-            .with_context(|| "invalid paper mc project provided")?;
+        let paper_mc_project =
+            PaperMcProject::try_from(self.project).context("invalid paper mc project provided")?;
 
         Ok(PaperMcServerModel {
             id: Set(context.application.id.to_string()),

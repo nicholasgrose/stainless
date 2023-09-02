@@ -79,8 +79,7 @@ impl TryFrom<&iron_api::minecraft_service::MemoryAmount> for MemoryAmount {
     type Error = anyhow::Error;
 
     fn try_from(value: &iron_api::minecraft_service::MemoryAmount) -> anyhow::Result<Self> {
-        let unit =
-            MemoryUnit::from_i32(value.unit).with_context(|| "invalid memory unit provided")?;
+        let unit = MemoryUnit::try_from(value.unit).context("invalid memory unit provided")?;
 
         Ok(match unit {
             MemoryUnit::Gibibytes => MemoryAmount::Gibibytes(value.amount),
