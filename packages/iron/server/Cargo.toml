@@ -11,10 +11,10 @@ async-trait = "0.1"
 entity = { path = "../../database/entity" }
 http = "0.2"
 iron_api = { path = "../api" }
-prost = "0.12.0"
-sea-orm = { version = "0", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print", "with-uuid", "with-chrono"] }
+prost = "0.12"
+sea-orm = { version = "0.12", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print", "with-uuid", "with-chrono"] }
 tokio = { version = "1.32", features = ["full"] }
-tonic = { version = "0.10.0", features = ["tls"] }
+tonic = { version = "0.10", features = ["tls"] }
 tower = { version = "0.4", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
