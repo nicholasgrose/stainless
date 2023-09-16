@@ -33,7 +33,7 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
         let context = AppCreateContext::try_from(request.into_inner()).map_err(to_tonic_status)?;
         let id = context.application.properties.id;
 
-        info!("creating server {:?}", context.application.properties);
+        info!(?context.application.properties);
 
         self.db.insert(&context).await.map_err(to_tonic_status)?;
         execute_new(&self.app_manager, context.application)

@@ -12,8 +12,8 @@ pub struct ManagerDispatcher {
 
 #[async_trait]
 impl AppEventDispatcher for ManagerDispatcher {
-    async fn dispatch(&self, event: AppEvent) -> anyhow::Result<()> {
-        match event {
+    async fn dispatch(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
+        match &*event {
             AppEvent::Start { .. } => {}
             AppEvent::End { application, .. } => {
                 let app_id = &application.read().await.properties.id;

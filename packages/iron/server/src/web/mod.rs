@@ -9,8 +9,8 @@ use anyhow::Context;
 use http::Uri;
 use sea_orm::Database;
 use tonic::transport::{Identity, Server, ServerTlsConfig};
-use tracing::warn;
-use tracing::{info, instrument};
+use tracing::instrument;
+use tracing::{debug, warn};
 
 use iron_api::minecraft_service::minecraft_server_creator_server::MinecraftServerCreatorServer;
 
@@ -82,7 +82,7 @@ where
 impl IronGrpcService {
     #[instrument]
     pub async fn start(&self) -> anyhow::Result<()> {
-        info!("starting grpc service");
+        debug!("starting grpc service");
 
         let db = IronDatabase::from(Database::connect(self.database_uri.to_string()).await?).into();
         let app_manager = ApplicationManager::default().into();

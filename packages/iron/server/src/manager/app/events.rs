@@ -20,5 +20,5 @@ pub enum AppEvent {
 
 #[async_trait]
 pub trait AppEventDispatcher: Send + Sync + Debug {
-    async fn dispatch(&self, event: AppEvent) -> anyhow::Result<()>;
+    async fn dispatch(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
 }

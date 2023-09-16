@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use async_trait::async_trait;
 use sea_orm::{ActiveModelTrait, ConnectionTrait, TransactionTrait};
-use tracing::{info, instrument};
+use tracing::{debug, instrument};
 
 use crate::database::IronDatabase;
 
@@ -22,7 +22,7 @@ where
 impl IronDatabase {
     #[instrument(skip(self))]
     pub async fn insert(&self, value: &impl Insert) -> anyhow::Result<()> {
-        info!("inserting new entry");
+        debug!("inserting new value");
 
         let transaction = self.connection.begin().await?;
 

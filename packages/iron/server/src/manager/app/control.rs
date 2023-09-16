@@ -9,6 +9,7 @@ use tokio::sync::mpsc::Receiver;
 use tokio::sync::{mpsc, RwLock};
 use tokio::task::JoinHandle;
 use tokio::{pin, select};
+use tracing::{instrument, trace};
 
 use crate::manager::app::events::AppEvent;
 use crate::manager::app::{Application, ApplicationState};
@@ -28,6 +29,20 @@ pub async fn start(app_lock: &Arc<RwLock<Application>>) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[derive(Clone, Debug)]
+pub enum EventReceiverCommand {
+    Dispatch(Arc<AppEvent>),
+    Close,
+}
+
+macro_rules! safely {
+    ($broadcast:expr) => {
+        if let Err(e) = $broadcast.await {
+            return e;
+        }
+    };
+}
+
 fn create_app_process_task(
     app_lock: &Arc<RwLock<Application>>,
     app_process: Child,
@@ -36,36 +51,56 @@ fn create_app_process_task(
     let task_lock = app_lock.clone();
 
     tokio::spawn(async move {
-        let app_event = AppEvent::Start {
-            application: task_lock.clone(),
-        };
-        if let Err(e) = broadcast_event(&task_lock, app_event).await {
-            return e;
-        }
+        safely!(broadcast_event(
+            &task_lock,
+            AppEvent::Start {
+                application: task_lock.clone(),
+            }
+        ));
 
         let execution_result = Arc::new(attach_receiver_to_process(receiver, app_process).await);
 
-        let app_event = AppEvent::End {
-            application: task_lock.clone(),
-            result: execution_result.clone(),
-        };
-        if let Err(e) = broadcast_event(&task_lock, app_event).await {
-            return e;
-        }
+        safely!(broadcast_event(
+            &task_lock,
+            AppEvent::End {
+                application: task_lock.clone(),
+                result: execution_result.clone(),
+            }
+        ));
+
+        safely!(broadcast_final_event(&task_lock));
 
         execution_result
     })
+}
+
+async fn broadcast_final_event(
+    app_lock: &Arc<RwLock<Application>>,
+) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
+    broadcast(app_lock, EventReceiverCommand::Close).await
 }
 
 async fn broadcast_event(
     app_lock: &Arc<RwLock<Application>>,
     event: AppEvent,
 ) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
+    let receiver_command = EventReceiverCommand::Dispatch(Arc::new(event));
+
+    broadcast(app_lock, receiver_command).await
+}
+
+#[instrument]
+async fn broadcast(
+    app_lock: &Arc<RwLock<Application>>,
+    receiver_command: EventReceiverCommand,
+) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
+    trace!(app = ?app_lock, ?receiver_command);
+
     app_lock
         .read()
         .await
         .events
-        .send(event)
+        .send(receiver_command)
         .context("failed to broadcast app process event")
         .map_err(|e| Arc::new(Err(e)))
 }

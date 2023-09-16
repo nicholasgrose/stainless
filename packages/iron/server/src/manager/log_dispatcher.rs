@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
-use tracing::{info, span, Level, Span};
+use tracing::{info, info_span, instrument, Span};
 use uuid::Uuid;
 
 use crate::manager::app::events::{AppEvent, AppEventDispatcher};
@@ -10,33 +12,30 @@ pub struct LogDispatcher {
 }
 
 impl LogDispatcher {
-    pub fn new(id: &Uuid) -> Self {
-        let id = id.to_string();
-
+    pub fn new(uuid: &Uuid) -> Self {
         LogDispatcher {
-            span: span!(Level::INFO, "app task", "uuid" = id),
+            span: info_span!("app task", ?uuid),
         }
     }
 }
 
 #[async_trait]
 impl AppEventDispatcher for LogDispatcher {
-    async fn dispatch(&self, event: AppEvent) -> anyhow::Result<()> {
-        let _enter = self.span.enter();
-
-        match event {
+    #[instrument(parent = &self.span)]
+    async fn dispatch(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
+        match &*event {
             AppEvent::Start { .. } => {
-                info!("application started")
+                info!("app started")
             }
             AppEvent::End {
                 application: _,
                 result,
-            } => match &*result {
+            } => match &**result {
                 Ok(status) => {
-                    info!("task exited with {}", status)
+                    info!(?status)
                 }
                 Err(error) => {
-                    info!("task failed with {}", error)
+                    info!(?error)
                 }
             },
         }

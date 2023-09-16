@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use tokio::sync::RwLock;
-use tracing::{info, instrument};
+use tracing::{debug, instrument};
 use uuid::Uuid;
 
 use crate::manager::app::control::start;
@@ -40,11 +40,11 @@ pub async fn execute_new(
     manager: &Arc<ApplicationManager>,
     app_settings: AppCreationSettings,
 ) -> anyhow::Result<()> {
-    info!("starting application");
+    debug!("starting application");
 
     let app_id = app_settings.properties.id;
     let app = Application::new(app_settings);
-    app.subscribe_dispatcher(Box::new(ManagerDispatcher {
+    app.subscribe_dispatcher(Arc::new(ManagerDispatcher {
         manager: manager.clone(),
     }));
 
