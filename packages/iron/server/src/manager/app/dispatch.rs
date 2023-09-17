@@ -4,9 +4,8 @@ use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
 use tracing::{instrument, warn};
 
-use crate::manager::app::control::EventReceiverCommand;
 use crate::manager::app::events::{AppEvent, AppEventDispatcher};
-use crate::manager::app::Application;
+use crate::manager::app::{Application, EventListenerCommand};
 
 impl Application {
     pub fn subscribe_dispatcher(
@@ -20,7 +19,7 @@ impl Application {
 
     pub fn attach_receiver_to_dispatcher(
         &self,
-        mut receiver: broadcast::Receiver<EventReceiverCommand>,
+        mut receiver: broadcast::Receiver<EventListenerCommand>,
         dispatcher: Arc<dyn AppEventDispatcher>,
     ) -> JoinHandle<anyhow::Result<()>> {
         let app_span = self.span.clone();
@@ -32,10 +31,10 @@ impl Application {
                 let app_event = receiver.recv().await?;
 
                 match app_event {
-                    EventReceiverCommand::Close => {
+                    EventListenerCommand::Close => {
                         return Ok(());
                     }
-                    EventReceiverCommand::Dispatch(event) => {
+                    EventListenerCommand::Dispatch(event) => {
                         spawn_dispatch_async(dispatcher.clone(), event.clone(), app_span.clone());
                         dispatch_sync(dispatcher.clone(), event);
                     }

@@ -5,14 +5,13 @@ use anyhow::anyhow;
 use anyhow::Context;
 use tokio::io::AsyncWriteExt;
 use tokio::process::Child;
-use tokio::sync::mpsc::Receiver;
 use tokio::sync::{mpsc, RwLock};
 use tokio::task::JoinHandle;
 use tokio::{pin, select};
 use tracing::{instrument, trace};
 
 use crate::manager::app::events::AppEvent;
-use crate::manager::app::{Application, ApplicationState};
+use crate::manager::app::{Application, ApplicationState, EventListenerCommand};
 
 pub async fn start(app_lock: &Arc<RwLock<Application>>) -> anyhow::Result<()> {
     let mut app = app_lock.write().await;
@@ -27,12 +26,6 @@ pub async fn start(app_lock: &Arc<RwLock<Application>>) -> anyhow::Result<()> {
     };
 
     Ok(())
-}
-
-#[derive(Clone, Debug)]
-pub enum EventReceiverCommand {
-    Dispatch(Arc<AppEvent>),
-    Close,
 }
 
 macro_rules! safely {
@@ -77,14 +70,14 @@ fn create_app_process_task(
 async fn broadcast_final_event(
     app_lock: &Arc<RwLock<Application>>,
 ) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
-    broadcast(app_lock, EventReceiverCommand::Close).await
+    broadcast(app_lock, EventListenerCommand::Close).await
 }
 
 async fn broadcast_event(
     app_lock: &Arc<RwLock<Application>>,
     event: AppEvent,
 ) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
-    let receiver_command = EventReceiverCommand::Dispatch(Arc::new(event));
+    let receiver_command = EventListenerCommand::Dispatch(Arc::new(event));
 
     broadcast(app_lock, receiver_command).await
 }
@@ -92,7 +85,7 @@ async fn broadcast_event(
 #[instrument]
 async fn broadcast(
     app_lock: &Arc<RwLock<Application>>,
-    receiver_command: EventReceiverCommand,
+    receiver_command: EventListenerCommand,
 ) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
     trace!(app = ?app_lock, ?receiver_command);
 
@@ -106,7 +99,7 @@ async fn broadcast(
 }
 
 pub async fn attach_receiver_to_process(
-    mut receiver: Receiver<u8>,
+    mut receiver: mpsc::Receiver<u8>,
     mut process: Child,
 ) -> anyhow::Result<ExitStatus> {
     let mut child_in = process

@@ -10,8 +10,7 @@ use tokio::task::JoinHandle;
 use tracing::info_span;
 use uuid::Uuid;
 
-use crate::manager::app::control::EventReceiverCommand;
-use crate::manager::app::events::AppEventDispatcher;
+use crate::manager::app::events::{AppEvent, AppEventDispatcher};
 use crate::manager::log_dispatcher::LogDispatcher;
 
 pub mod control;
@@ -29,7 +28,7 @@ pub struct Application {
     pub span: Arc<tracing::Span>,
     pub properties: AppProperties,
     pub state: ApplicationState,
-    pub events: broadcast::Sender<EventReceiverCommand>,
+    pub events: broadcast::Sender<EventListenerCommand>,
 }
 
 #[derive(Debug)]
@@ -46,6 +45,12 @@ pub enum ApplicationState {
         app_task: JoinHandle<Arc<anyhow::Result<ExitStatus>>>,
         input_sender: mpsc::Sender<u8>,
     },
+}
+
+#[derive(Clone, Debug)]
+pub enum EventListenerCommand {
+    Dispatch(Arc<AppEvent>),
+    Close,
 }
 
 impl Application {
