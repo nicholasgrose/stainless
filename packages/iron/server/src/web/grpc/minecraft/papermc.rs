@@ -9,28 +9,18 @@ use entity::paper_mc_server::ActiveModel as PaperMcServerModel;
 use iron_api::minecraft_service::{PaperMcProject, PaperMcServerDefinition};
 
 use crate::database::insert::{Insert, InsertModel};
-use crate::manager::app::events::{AppEvent, AppEventDispatcher};
+use crate::manager::app::events::{AppEvent, AppEventHandler};
 use crate::manager::app::{AppCreationSettings, AppProperties};
 use crate::web::grpc::minecraft::aikars_flags::AikarsFlags;
 use crate::web::grpc::AppCreateContext;
 
 #[derive(Default, Debug)]
-pub struct PaperMcDispatcher;
+pub struct PaperMcHandler;
 
 #[async_trait]
-impl AppEventDispatcher for PaperMcDispatcher {
-    async fn dispatch(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
+impl AppEventHandler for PaperMcHandler {
+    async fn handle(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
         Ok(())
-    }
-
-    fn dispatch_sync(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
-        Ok(())
-    }
-}
-
-impl AsRef<Self> for PaperMcDispatcher {
-    fn as_ref(&self) -> &Self {
-        self
     }
 }
 
@@ -49,7 +39,8 @@ impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefiniti
                     name: server_definition.name.clone(),
                     command: AikarsFlags::try_from(minecraft_server_definition)?.to_string(),
                 },
-                starting_handlers: vec![Arc::<PaperMcDispatcher>::default()],
+                async_event_handlers: vec![Arc::<PaperMcHandler>::default()],
+                sync_event_handlers: vec![],
             },
             message: papermc_definition,
         })

@@ -19,7 +19,6 @@ pub enum AppEvent {
 }
 
 #[async_trait]
-pub trait AppEventDispatcher: Send + Sync + Debug {
-    async fn dispatch(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
-    fn dispatch_sync(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
+pub trait AppEventHandler: Send + Sync + Debug {
+    async fn handle(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
 }

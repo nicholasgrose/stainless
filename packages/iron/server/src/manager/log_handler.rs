@@ -3,14 +3,14 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use tracing::info;
 
-use crate::manager::app::events::{AppEvent, AppEventDispatcher};
+use crate::manager::app::events::{AppEvent, AppEventHandler};
 
 #[derive(Debug, Default)]
-pub struct LogDispatcher;
+pub struct LogHandler;
 
 #[async_trait]
-impl AppEventDispatcher for LogDispatcher {
-    async fn dispatch(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
+impl AppEventHandler for LogHandler {
+    async fn handle(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
         match &*event {
             AppEvent::Start { .. } => {
                 info!("app started")
@@ -28,10 +28,6 @@ impl AppEventDispatcher for LogDispatcher {
             },
         }
 
-        Ok(())
-    }
-
-    fn dispatch_sync(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
         Ok(())
     }
 }

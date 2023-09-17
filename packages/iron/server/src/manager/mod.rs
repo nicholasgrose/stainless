@@ -6,13 +6,12 @@ use tokio::sync::RwLock;
 use tracing::{debug, instrument};
 use uuid::Uuid;
 
-use crate::manager::app::control::start;
 use crate::manager::app::{AppCreationSettings, Application};
-use crate::manager::manager_dispatcher::ManagerDispatcher;
+use crate::manager::manager_handler::ManagerHandler;
 
 pub mod app;
-mod log_dispatcher;
-mod manager_dispatcher;
+mod log_handler;
+mod manager_handler;
 
 #[derive(Debug, Default)]
 pub struct ApplicationManager {
@@ -44,7 +43,7 @@ pub async fn execute_new(
 
     let app_id = app_settings.properties.id;
     let app = Application::new(app_settings);
-    app.subscribe_dispatcher(Arc::new(ManagerDispatcher {
+    app.subscribe_async_handler(Arc::new(ManagerHandler {
         manager: manager.clone(),
     }));
 
@@ -52,7 +51,7 @@ pub async fn execute_new(
 
     let apps = manager.applications.read().await;
     if let Some(app) = apps.get(&app_id) {
-        start(app).await?;
+        app.write().await.start(app.clone()).await?;
     }
 
     Ok(())

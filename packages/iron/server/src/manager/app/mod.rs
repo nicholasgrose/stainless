@@ -10,8 +10,8 @@ use tokio::task::JoinHandle;
 use tracing::info_span;
 use uuid::Uuid;
 
-use crate::manager::app::events::{AppEvent, AppEventDispatcher};
-use crate::manager::log_dispatcher::LogDispatcher;
+use crate::manager::app::events::{AppEvent, AppEventHandler};
+use crate::manager::log_handler::LogHandler;
 
 pub mod control;
 pub mod dispatch;
@@ -20,7 +20,8 @@ pub mod events;
 #[derive(Debug)]
 pub struct AppCreationSettings {
     pub properties: AppProperties,
-    pub starting_handlers: Vec<Arc<dyn AppEventDispatcher>>,
+    pub async_event_handlers: Vec<Arc<dyn AppEventHandler>>,
+    pub sync_event_handlers: Vec<Arc<dyn AppEventHandler>>,
 }
 
 #[derive(Debug)]
@@ -29,6 +30,7 @@ pub struct Application {
     pub properties: AppProperties,
     pub state: ApplicationState,
     pub events: broadcast::Sender<EventListenerCommand>,
+    pub sync_event_handlers: Vec<Arc<dyn AppEventHandler>>,
 }
 
 #[derive(Debug)]
@@ -61,15 +63,16 @@ impl Application {
             properties: settings.properties,
             state: ApplicationState::Inactive,
             events: sender,
+            sync_event_handlers: settings.sync_event_handlers,
         };
 
         {
             let _enter = app.span.enter();
 
-            app.attach_receiver_to_dispatcher(receiver, Arc::<LogDispatcher>::default());
+            app.spawn_listener_for_handler(receiver, Arc::<LogHandler>::default());
 
-            for handler in settings.starting_handlers {
-                app.subscribe_dispatcher(handler);
+            for handler in settings.async_event_handlers {
+                app.subscribe_async_handler(handler);
             }
         }
 

@@ -2,17 +2,17 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::manager::app::events::{AppEvent, AppEventDispatcher};
+use crate::manager::app::events::{AppEvent, AppEventHandler};
 use crate::manager::ApplicationManager;
 
 #[derive(Debug)]
-pub struct ManagerDispatcher {
+pub struct ManagerHandler {
     pub manager: Arc<ApplicationManager>,
 }
 
 #[async_trait]
-impl AppEventDispatcher for ManagerDispatcher {
-    async fn dispatch(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
+impl AppEventHandler for ManagerHandler {
+    async fn handle(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
         match &*event {
             AppEvent::Start { .. } => {}
             AppEvent::End { application, .. } => {
@@ -22,10 +22,6 @@ impl AppEventDispatcher for ManagerDispatcher {
             }
         }
 
-        Ok(())
-    }
-
-    fn dispatch_sync(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
         Ok(())
     }
 }

@@ -8,25 +8,10 @@ use tokio::process::Child;
 use tokio::sync::{mpsc, RwLock};
 use tokio::task::JoinHandle;
 use tokio::{pin, select};
-use tracing::{instrument, trace};
+use tracing::instrument;
 
 use crate::manager::app::events::AppEvent;
 use crate::manager::app::{Application, ApplicationState, EventListenerCommand};
-
-pub async fn start(app_lock: &Arc<RwLock<Application>>) -> anyhow::Result<()> {
-    let mut app = app_lock.write().await;
-
-    let (sender, receiver) = tokio::sync::mpsc::channel(100);
-    let app_process = app.execute().await?;
-    let app_task = create_app_process_task(app_lock, app_process, receiver);
-
-    app.state = ApplicationState::Active {
-        app_task,
-        input_sender: sender,
-    };
-
-    Ok(())
-}
 
 macro_rules! safely {
     ($broadcast:expr) => {
@@ -36,66 +21,89 @@ macro_rules! safely {
     };
 }
 
-fn create_app_process_task(
+impl Application {
+    pub async fn start(&mut self, app_lock: Arc<RwLock<Application>>) -> anyhow::Result<()> {
+        let (sender, receiver) = tokio::sync::mpsc::channel(100);
+        let app_process = self.execute().await?;
+        let app_task = self.create_app_process_task(app_lock, app_process, receiver);
+
+        self.state = ApplicationState::Active {
+            app_task,
+            input_sender: sender,
+        };
+
+        Ok(())
+    }
+
+    fn create_app_process_task(
+        &self,
+        app_lock: Arc<RwLock<Application>>,
+        app_process: Child,
+        receiver: mpsc::Receiver<u8>,
+    ) -> JoinHandle<Arc<anyhow::Result<ExitStatus>>> {
+        let app_span = self.span.clone();
+
+        tokio::spawn(async move {
+            let _enter = app_span.enter();
+
+            safely!(trigger_event(
+                &app_lock,
+                AppEvent::Start {
+                    application: app_lock.clone(),
+                }
+            ));
+
+            let execution_result =
+                Arc::new(attach_receiver_to_process(receiver, app_process).await);
+
+            safely!(trigger_event(
+                &app_lock,
+                AppEvent::End {
+                    application: app_lock.clone(),
+                    result: execution_result.clone(),
+                }
+            ));
+
+            safely!(broadcast_final_event(&app_lock));
+
+            execution_result
+        })
+    }
+
+    #[instrument]
+    async fn broadcast_command(
+        &self,
+        listener_command: EventListenerCommand,
+    ) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
+        self.events
+            .send(listener_command)
+            .context("failed to broadcast app process event")
+            .map_err(|e| Arc::new(Err(e)))
+    }
+}
+
+async fn trigger_event(
     app_lock: &Arc<RwLock<Application>>,
-    app_process: Child,
-    receiver: mpsc::Receiver<u8>,
-) -> JoinHandle<Arc<anyhow::Result<ExitStatus>>> {
-    let task_lock = app_lock.clone();
+    event: AppEvent,
+) -> anyhow::Result<(), Arc<anyhow::Result<ExitStatus>>> {
+    let app = app_lock.read().await;
+    let event = Arc::new(event);
+    let listener_command = EventListenerCommand::Dispatch(event.clone());
 
-    tokio::spawn(async move {
-        safely!(broadcast_event(
-            &task_lock,
-            AppEvent::Start {
-                application: task_lock.clone(),
-            }
-        ));
+    app.broadcast_command(listener_command).await?;
+    app.send_sync_event(&event).await;
 
-        let execution_result = Arc::new(attach_receiver_to_process(receiver, app_process).await);
-
-        safely!(broadcast_event(
-            &task_lock,
-            AppEvent::End {
-                application: task_lock.clone(),
-                result: execution_result.clone(),
-            }
-        ));
-
-        safely!(broadcast_final_event(&task_lock));
-
-        execution_result
-    })
+    Ok(())
 }
 
 async fn broadcast_final_event(
     app_lock: &Arc<RwLock<Application>>,
 ) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
-    broadcast(app_lock, EventListenerCommand::Close).await
-}
-
-async fn broadcast_event(
-    app_lock: &Arc<RwLock<Application>>,
-    event: AppEvent,
-) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
-    let receiver_command = EventListenerCommand::Dispatch(Arc::new(event));
-
-    broadcast(app_lock, receiver_command).await
-}
-
-#[instrument]
-async fn broadcast(
-    app_lock: &Arc<RwLock<Application>>,
-    receiver_command: EventListenerCommand,
-) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
-    trace!(app = ?app_lock, ?receiver_command);
-
     app_lock
         .read()
         .await
-        .events
-        .send(receiver_command)
-        .context("failed to broadcast app process event")
-        .map_err(|e| Arc::new(Err(e)))
+        .broadcast_command(EventListenerCommand::Close)
+        .await
 }
 
 pub async fn attach_receiver_to_process(

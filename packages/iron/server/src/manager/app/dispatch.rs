@@ -1,26 +1,62 @@
 use std::sync::Arc;
 
 use tokio::sync::broadcast;
-use tokio::task::JoinHandle;
+use tokio::task::{JoinHandle, JoinSet};
 use tracing::{instrument, warn};
 
-use crate::manager::app::events::{AppEvent, AppEventDispatcher};
+use crate::manager::app::events::{AppEvent, AppEventHandler};
 use crate::manager::app::{Application, EventListenerCommand};
 
 impl Application {
-    pub fn subscribe_dispatcher(
+    pub fn _subscribe_sync_handler(&mut self, handler: Arc<dyn AppEventHandler>) {
+        self.sync_event_handlers.push(handler);
+    }
+
+    pub async fn send_sync_event(&self, event: &Arc<AppEvent>) {
+        let mut handler_pool = JoinSet::new();
+
+        self.dispatch_sync_events(&mut handler_pool, event);
+        self.await_sync_handler_results(&mut handler_pool).await;
+    }
+
+    fn dispatch_sync_events(&self, handler_pool: &mut JoinSet<()>, event: &Arc<AppEvent>) {
+        for handler in &self.sync_event_handlers {
+            let app_span = self.span.clone();
+            let dispatch_handler = handler.clone();
+            let dispatch_event = event.clone();
+
+            handler_pool.spawn(async move {
+                let _enter = app_span.enter();
+
+                dispatch(dispatch_handler, dispatch_event).await
+            });
+        }
+    }
+
+    async fn await_sync_handler_results(&self, handler_pool: &mut JoinSet<()>) {
+        loop {
+            match handler_pool.join_next().await {
+                None => {
+                    break;
+                }
+                Some(_result) => {}
+            }
+        }
+    }
+
+    pub fn subscribe_async_handler(
         &self,
-        dispatcher: Arc<dyn AppEventDispatcher>,
+        handler: Arc<dyn AppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
         let receiver = self.events.subscribe();
 
-        self.attach_receiver_to_dispatcher(receiver, dispatcher)
+        self.spawn_listener_for_handler(receiver, handler)
     }
 
-    pub fn attach_receiver_to_dispatcher(
+    pub fn spawn_listener_for_handler(
         &self,
         mut receiver: broadcast::Receiver<EventListenerCommand>,
-        dispatcher: Arc<dyn AppEventDispatcher>,
+        handler: Arc<dyn AppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
         let app_span = self.span.clone();
 
@@ -35,8 +71,7 @@ impl Application {
                         return Ok(());
                     }
                     EventListenerCommand::Dispatch(event) => {
-                        spawn_dispatch_async(dispatcher.clone(), event.clone(), app_span.clone());
-                        dispatch_sync(dispatcher.clone(), event);
+                        spawn_dispatch(handler.clone(), event.clone(), app_span.clone());
                     }
                 }
             }
@@ -44,31 +79,21 @@ impl Application {
     }
 }
 
-fn spawn_dispatch_async(
-    dispatcher: Arc<dyn AppEventDispatcher>,
+fn spawn_dispatch(
+    handler: Arc<dyn AppEventHandler>,
     event: Arc<AppEvent>,
     app_span: Arc<tracing::Span>,
 ) {
     tokio::spawn(async move {
         let _app_enter = app_span.enter();
 
-        dispatch_async(dispatcher, event).await
+        dispatch(handler, event).await
     });
 }
 
 #[instrument]
-async fn dispatch_async(dispatcher: Arc<dyn AppEventDispatcher>, event: Arc<AppEvent>) {
-    match dispatcher.dispatch(event.clone()).await {
-        Ok(_) => {}
-        Err(error) => {
-            warn!(?event, ?error)
-        }
-    }
-}
-
-#[instrument]
-fn dispatch_sync(dispatcher: Arc<dyn AppEventDispatcher>, event: Arc<AppEvent>) {
-    match dispatcher.dispatch_sync(event.clone()) {
+async fn dispatch(handler: Arc<dyn AppEventHandler>, event: Arc<AppEvent>) {
+    match handler.handle(event.clone()).await {
         Ok(_) => {}
         Err(error) => {
             warn!(?event, ?error)
