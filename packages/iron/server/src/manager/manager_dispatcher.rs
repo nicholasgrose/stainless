@@ -24,4 +24,8 @@ impl AppEventDispatcher for ManagerDispatcher {
 
         Ok(())
     }
+
+    fn dispatch_sync(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
+        Ok(())
+    }
 }

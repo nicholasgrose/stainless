@@ -1,7 +1,8 @@
+use std::sync::Arc;
+
 use anyhow::Context;
 use async_trait::async_trait;
 use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
-use std::sync::Arc;
 use uuid::Uuid;
 
 use entity::paper_mc_server::ActiveModel as PaperMcServerModel;
@@ -19,6 +20,10 @@ pub struct PaperMcDispatcher;
 #[async_trait]
 impl AppEventDispatcher for PaperMcDispatcher {
     async fn dispatch(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn dispatch_sync(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
         Ok(())
     }
 }
