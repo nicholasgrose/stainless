@@ -1,27 +1,16 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use tracing::{info, info_span, instrument, Span};
-use uuid::Uuid;
+use tracing::{info, instrument};
 
 use crate::manager::app::events::{AppEvent, AppEventDispatcher};
 
-#[derive(Debug)]
-pub struct LogDispatcher {
-    span: Span,
-}
-
-impl LogDispatcher {
-    pub fn new(uuid: &Uuid) -> Self {
-        LogDispatcher {
-            span: info_span!("app task", ?uuid),
-        }
-    }
-}
+#[derive(Debug, Default)]
+pub struct LogDispatcher;
 
 #[async_trait]
 impl AppEventDispatcher for LogDispatcher {
-    #[instrument(parent = &self.span)]
+    #[instrument]
     async fn dispatch(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
         match &*event {
             AppEvent::Start { .. } => {

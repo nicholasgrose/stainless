@@ -7,7 +7,7 @@ use tokio::process::{Child, Command};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use tracing::warn;
+use tracing::{info_span, warn};
 use uuid::Uuid;
 
 use crate::manager::app::control::EventReceiverCommand;
@@ -27,6 +27,7 @@ pub struct AppCreationSettings {
 pub struct Application {
     pub properties: AppProperties,
     pub state: ApplicationState,
+    pub span: tracing::Span,
     pub events: broadcast::Sender<EventReceiverCommand>,
 }
 
@@ -50,15 +51,20 @@ impl Application {
     pub fn new(settings: AppCreationSettings) -> Self {
         let (sender, receiver) = broadcast::channel(4);
         let app = Application {
+            span: info_span!(parent: None, "app", ?settings.properties),
             properties: settings.properties,
             state: ApplicationState::Inactive,
             events: sender,
         };
 
-        attach_receiver_to_dispatcher(receiver, Arc::new(LogDispatcher::new(&app.properties.id)));
+        {
+            let _enter = app.span.enter();
 
-        for handler in settings.starting_handlers {
-            app.subscribe_dispatcher(handler);
+            app.attach_receiver_to_dispatcher(receiver, Arc::<LogDispatcher>::default());
+
+            for handler in settings.starting_handlers {
+                app.subscribe_dispatcher(handler);
+            }
         }
 
         app
@@ -70,7 +76,39 @@ impl Application {
     ) -> JoinHandle<anyhow::Result<()>> {
         let receiver = self.events.subscribe();
 
-        attach_receiver_to_dispatcher(receiver, dispatcher)
+        self.attach_receiver_to_dispatcher(receiver, dispatcher)
+    }
+
+    fn attach_receiver_to_dispatcher(
+        &self,
+        mut receiver: broadcast::Receiver<EventReceiverCommand>,
+        dispatcher: Arc<dyn AppEventDispatcher>,
+    ) -> JoinHandle<anyhow::Result<()>> {
+        let _enter = self.span.enter();
+
+        tokio::spawn(async move {
+            loop {
+                let app_event = receiver.recv().await?;
+
+                match app_event {
+                    EventReceiverCommand::Close => {
+                        return Ok(());
+                    }
+                    EventReceiverCommand::Dispatch(event) => {
+                        let task_dispatcher = dispatcher.clone();
+
+                        tokio::spawn(async move {
+                            match task_dispatcher.dispatch(event.clone()).await {
+                                Ok(_) => {}
+                                Err(error) => {
+                                    warn!(?event, ?error)
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        })
     }
 
     async fn execute(&self) -> anyhow::Result<Child> {
@@ -94,33 +132,4 @@ impl Application {
 
         Ok(path)
     }
-}
-
-fn attach_receiver_to_dispatcher(
-    mut receiver: broadcast::Receiver<EventReceiverCommand>,
-    dispatcher: Arc<dyn AppEventDispatcher>,
-) -> JoinHandle<anyhow::Result<()>> {
-    tokio::spawn(async move {
-        loop {
-            let app_event = receiver.recv().await?;
-
-            match app_event {
-                EventReceiverCommand::Close => {
-                    return Ok(());
-                }
-                EventReceiverCommand::Dispatch(event) => {
-                    let task_dispatcher = dispatcher.clone();
-
-                    tokio::spawn(async move {
-                        match task_dispatcher.dispatch(event.clone()).await {
-                            Ok(_) => {}
-                            Err(error) => {
-                                warn!(?event, ?error)
-                            }
-                        }
-                    });
-                }
-            }
-        }
-    })
 }
