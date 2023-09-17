@@ -8,6 +8,10 @@ mod web;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
+    start_logging();
     IronGrpcService::default().start().await
+}
+
+fn start_logging() {
+    console_subscriber::init();
 }
