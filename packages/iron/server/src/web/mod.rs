@@ -7,8 +7,9 @@ use std::str::FromStr;
 
 use anyhow::Context;
 use http::Uri;
-use sea_orm::Database;
+use sea_orm::{ConnectOptions, Database};
 use tonic::transport::{Identity, Server, ServerTlsConfig};
+use tracing::log::LevelFilter;
 use tracing::warn;
 use tracing::{info, instrument};
 
@@ -42,8 +43,8 @@ pub struct IronTlsConfig {
     pub key_file_path: PathBuf,
 }
 
-impl Default for IronGrpcService {
-    fn default() -> Self {
+impl IronGrpcService {
+    pub fn new() -> Self {
         IronGrpcService {
             database_uri: env_var("IRON_DATABASE_URI", "sqlite://iron_db.sqlite3"),
             tls: IronTlsConfig {
@@ -84,7 +85,9 @@ impl IronGrpcService {
     pub async fn start(&self) -> anyhow::Result<()> {
         info!("starting iron");
 
-        let db = IronDatabase::from(Database::connect(self.database_uri.to_string()).await?).into();
+        let mut db_connect_options = ConnectOptions::new(self.database_uri.to_string());
+        db_connect_options.sqlx_logging_level(LevelFilter::Debug);
+        let db = IronDatabase::from(Database::connect(db_connect_options).await?).into();
         let app_manager = ApplicationManager::default().into();
         let tls_config = self.load_tls_config().await?;
 

@@ -63,14 +63,10 @@ impl Application {
             sync_event_handlers: settings.sync_event_handlers,
         };
 
-        {
-            let _enter = app.span.enter();
+        app.spawn_event_listener(receiver, Arc::<LogHandler>::default());
 
-            app.spawn_event_listener(receiver, Arc::<LogHandler>::default());
-
-            for handler in settings.async_event_handlers {
-                app.subscribe_async_handler(handler);
-            }
+        for handler in settings.async_event_handlers {
+            app.subscribe_async_handler(handler);
         }
 
         app

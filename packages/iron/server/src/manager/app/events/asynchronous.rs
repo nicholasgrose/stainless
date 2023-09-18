@@ -22,6 +22,7 @@ impl Application {
         mut receiver: broadcast::Receiver<EventListenerCommand>,
         handler: Arc<dyn AppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
+        let _enter = self.span.enter();
         let app_span = self.span.clone();
 
         tokio::spawn(async move {
