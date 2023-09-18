@@ -56,6 +56,7 @@ impl Application {
         app_process: Child,
         receiver: mpsc::Receiver<u8>,
     ) -> JoinHandle<Arc<anyhow::Result<ExitStatus>>> {
+        let _enter = self.span.enter();
         let app_span = self.span.clone();
 
         tokio::spawn(async move {
