@@ -1,9 +1,7 @@
 use std::path::PathBuf;
-use std::process::{ExitStatus, Stdio};
+use std::process::ExitStatus;
 use std::sync::Arc;
 
-use tokio::fs::File;
-use tokio::process::{Child, Command};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
@@ -76,20 +74,6 @@ impl Application {
         }
 
         app
-    }
-
-    async fn execute(&self) -> anyhow::Result<Child> {
-        let working_directory = self.working_directory().await?;
-        let log_file = File::create(working_directory.join("application.log")).await?;
-        let command_args: Vec<&str> = self.properties.command.split(' ').collect();
-
-        Ok(Command::new(command_args[0])
-            .args(&command_args[1..])
-            .current_dir(&working_directory)
-            .stdin(Stdio::piped())
-            .stdout(log_file.into_std().await)
-            .stderr(Stdio::null())
-            .spawn()?)
     }
 
     async fn working_directory(&self) -> anyhow::Result<PathBuf> {

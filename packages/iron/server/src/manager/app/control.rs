@@ -1,10 +1,11 @@
-use std::process::ExitStatus;
+use std::process::{ExitStatus, Stdio};
 use std::sync::Arc;
 
 use anyhow::anyhow;
 use anyhow::Context;
+use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
-use tokio::process::Child;
+use tokio::process::{Child, Command};
 use tokio::sync::{mpsc, RwLock};
 use tokio::task::JoinHandle;
 use tokio::{pin, select};
@@ -33,6 +34,20 @@ impl Application {
         };
 
         Ok(())
+    }
+
+    async fn execute(&self) -> anyhow::Result<Child> {
+        let working_directory = self.working_directory().await?;
+        let log_file = File::create(working_directory.join("application.log")).await?;
+        let command_args: Vec<&str> = self.properties.command.split(' ').collect();
+
+        Ok(Command::new(command_args[0])
+            .args(&command_args[1..])
+            .current_dir(&working_directory)
+            .stdin(Stdio::piped())
+            .stdout(log_file.into_std().await)
+            .stderr(Stdio::null())
+            .spawn()?)
     }
 
     fn spawn_app_task(
@@ -71,7 +86,7 @@ impl Application {
     }
 }
 
-pub async fn process_with_input_receiver(
+async fn process_with_input_receiver(
     mut process: Child,
     mut receiver: mpsc::Receiver<u8>,
 ) -> anyhow::Result<ExitStatus> {
