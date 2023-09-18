@@ -25,11 +25,7 @@ impl Application {
             let dispatch_handler = handler.clone();
             let dispatch_event = event.clone();
 
-            handler_pool.spawn(async move {
-                let _enter = app_span.enter();
-
-                dispatch(dispatch_handler, dispatch_event).await
-            });
+            handler_pool.spawn(dispatch_task(dispatch_handler, dispatch_event, app_span));
         }
     }
 
@@ -71,7 +67,11 @@ impl Application {
                         return Ok(());
                     }
                     EventListenerCommand::Dispatch(event) => {
-                        spawn_dispatch(handler.clone(), event.clone(), app_span.clone());
+                        tokio::spawn(dispatch_task(
+                            handler.clone(),
+                            event.clone(),
+                            app_span.clone(),
+                        ));
                     }
                 }
             }
@@ -79,16 +79,14 @@ impl Application {
     }
 }
 
-fn spawn_dispatch(
+async fn dispatch_task(
     handler: Arc<dyn AppEventHandler>,
     event: Arc<AppEvent>,
     app_span: Arc<tracing::Span>,
 ) {
-    tokio::spawn(async move {
-        let _app_enter = app_span.enter();
+    let _app_enter = app_span.enter();
 
-        dispatch(handler, event).await
-    });
+    dispatch(handler, event).await
 }
 
 #[instrument]
