@@ -8,10 +8,10 @@ use tokio::process::Child;
 use tokio::sync::{mpsc, RwLock};
 use tokio::task::JoinHandle;
 use tokio::{pin, select};
-use tracing::instrument;
 
 use crate::manager::app::events::AppEvent;
-use crate::manager::app::{Application, ApplicationState, EventListenerCommand};
+use crate::manager::app::events::{listener::stop_command_listeners, send_event};
+use crate::manager::app::{Application, ApplicationState};
 
 macro_rules! safely {
     ($broadcast:expr) => {
@@ -25,7 +25,7 @@ impl Application {
     pub async fn start(&mut self, app_lock: Arc<RwLock<Application>>) -> anyhow::Result<()> {
         let (sender, receiver) = tokio::sync::mpsc::channel(100);
         let app_process = self.execute().await?;
-        let app_task = self.create_app_process_task(app_lock, app_process, receiver);
+        let app_task = self.spawn_app_task(app_lock, app_process, receiver);
 
         self.state = ApplicationState::Active {
             app_task,
@@ -35,7 +35,7 @@ impl Application {
         Ok(())
     }
 
-    fn create_app_process_task(
+    fn spawn_app_task(
         &self,
         app_lock: Arc<RwLock<Application>>,
         app_process: Child,
@@ -46,7 +46,7 @@ impl Application {
         tokio::spawn(async move {
             let _enter = app_span.enter();
 
-            safely!(trigger_event(
+            safely!(send_event(
                 &app_lock,
                 AppEvent::Start {
                     application: app_lock.clone(),
@@ -54,9 +54,9 @@ impl Application {
             ));
 
             let execution_result =
-                Arc::new(attach_receiver_to_process(receiver, app_process).await);
+                Arc::new(process_with_input_receiver(app_process, receiver).await);
 
-            safely!(trigger_event(
+            safely!(send_event(
                 &app_lock,
                 AppEvent::End {
                     application: app_lock.clone(),
@@ -64,51 +64,16 @@ impl Application {
                 }
             ));
 
-            safely!(broadcast_final_event(&app_lock));
+            safely!(stop_command_listeners(&app_lock));
 
             execution_result
         })
     }
-
-    #[instrument]
-    async fn broadcast_command(
-        &self,
-        listener_command: EventListenerCommand,
-    ) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
-        self.events
-            .send(listener_command)
-            .context("failed to broadcast app process event")
-            .map_err(|e| Arc::new(Err(e)))
-    }
 }
 
-async fn trigger_event(
-    app_lock: &Arc<RwLock<Application>>,
-    event: AppEvent,
-) -> anyhow::Result<(), Arc<anyhow::Result<ExitStatus>>> {
-    let app = app_lock.read().await;
-    let event = Arc::new(event);
-    let listener_command = EventListenerCommand::Dispatch(event.clone());
-
-    app.broadcast_command(listener_command).await?;
-    app.send_sync_event(&event).await;
-
-    Ok(())
-}
-
-async fn broadcast_final_event(
-    app_lock: &Arc<RwLock<Application>>,
-) -> anyhow::Result<usize, Arc<anyhow::Result<ExitStatus>>> {
-    app_lock
-        .read()
-        .await
-        .broadcast_command(EventListenerCommand::Close)
-        .await
-}
-
-pub async fn attach_receiver_to_process(
-    mut receiver: mpsc::Receiver<u8>,
+pub async fn process_with_input_receiver(
     mut process: Child,
+    mut receiver: mpsc::Receiver<u8>,
 ) -> anyhow::Result<ExitStatus> {
     let mut child_in = process
         .stdin

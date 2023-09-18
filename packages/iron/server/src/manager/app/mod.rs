@@ -14,7 +14,6 @@ use crate::manager::app::events::{AppEvent, AppEventHandler};
 use crate::manager::log_handler::LogHandler;
 
 pub mod control;
-pub mod dispatch;
 pub mod events;
 
 #[derive(Debug)]
@@ -69,7 +68,7 @@ impl Application {
         {
             let _enter = app.span.enter();
 
-            app.spawn_listener_for_handler(receiver, Arc::<LogHandler>::default());
+            app.spawn_event_listener(receiver, Arc::<LogHandler>::default());
 
             for handler in settings.async_event_handlers {
                 app.subscribe_async_handler(handler);
