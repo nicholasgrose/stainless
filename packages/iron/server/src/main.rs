@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
 
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+
 use crate::web::IronGrpcService;
 
 mod database;
@@ -13,5 +16,10 @@ async fn main() -> anyhow::Result<()> {
 }
 
 fn start_logging() {
-    console_subscriber::init();
+    let console_layer = console_subscriber::spawn();
+
+    tracing_subscriber::registry()
+        .with(console_layer)
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 }
