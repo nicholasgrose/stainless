@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::manager::app::events::{AppEvent, AppEventHandler};
 
@@ -26,6 +26,18 @@ impl AppEventHandler for LogHandler {
                     info!(?error)
                 }
             },
+            AppEvent::LineOut {
+                application: _application,
+                line,
+            } => {
+                info!(line);
+            }
+            AppEvent::ErrorLineOut {
+                application: _application,
+                line,
+            } => {
+                warn!(line);
+            }
         }
 
         Ok(())

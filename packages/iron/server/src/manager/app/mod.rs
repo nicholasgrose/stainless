@@ -26,7 +26,7 @@ pub struct Application {
     pub span: Arc<tracing::Span>,
     pub properties: AppProperties,
     pub state: ApplicationState,
-    pub events: broadcast::Sender<EventListenerCommand>,
+    pub events: broadcast::Sender<Arc<AppEvent>>,
     pub sync_event_handlers: Vec<Arc<dyn AppEventHandler>>,
 }
 
@@ -42,14 +42,8 @@ pub enum ApplicationState {
     Inactive,
     Active {
         app_task: JoinHandle<Arc<anyhow::Result<ExitStatus>>>,
-        input_sender: mpsc::Sender<u8>,
+        input_sender: mpsc::Sender<String>,
     },
-}
-
-#[derive(Clone, Debug)]
-pub enum EventListenerCommand {
-    Dispatch(Arc<AppEvent>),
-    Close,
 }
 
 impl Application {

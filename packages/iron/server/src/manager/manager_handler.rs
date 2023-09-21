@@ -20,6 +20,8 @@ impl AppEventHandler for ManagerHandler {
 
                 self.manager.remove(app_id).await;
             }
+            AppEvent::LineOut { .. } => {}
+            AppEvent::ErrorLineOut { .. } => {}
         }
 
         Ok(())

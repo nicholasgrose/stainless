@@ -3,9 +3,9 @@ use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
 
-use crate::manager::app::events::dispatch_task;
 use crate::manager::app::events::AppEventHandler;
-use crate::manager::app::{Application, EventListenerCommand};
+use crate::manager::app::events::{dispatch_task, AppEvent};
+use crate::manager::app::Application;
 
 impl Application {
     pub fn subscribe_async_handler(
@@ -19,7 +19,7 @@ impl Application {
 
     pub fn spawn_event_listener(
         &self,
-        mut receiver: broadcast::Receiver<EventListenerCommand>,
+        mut receiver: broadcast::Receiver<Arc<AppEvent>>,
         handler: Arc<dyn AppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
         let _enter = self.span.enter();
@@ -29,20 +29,13 @@ impl Application {
             let _enter = app_span.enter();
 
             loop {
-                let app_event = receiver.recv().await?;
+                let event = receiver.recv().await?;
 
-                match app_event {
-                    EventListenerCommand::Close => {
-                        return Ok(());
-                    }
-                    EventListenerCommand::Dispatch(event) => {
-                        tokio::spawn(dispatch_task(
-                            handler.clone(),
-                            event.clone(),
-                            app_span.clone(),
-                        ));
-                    }
-                }
+                tokio::spawn(dispatch_task(
+                    handler.clone(),
+                    event.clone(),
+                    app_span.clone(),
+                ));
             }
         })
     }

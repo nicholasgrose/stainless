@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use tokio::sync::RwLock;
 use tracing::{instrument, warn};
 
-use crate::manager::app::{Application, EventListenerCommand};
+use crate::manager::app::Application;
 
 pub mod asynchronous;
 pub mod listener;
@@ -21,6 +21,14 @@ pub enum AppEvent {
         application: Arc<RwLock<Application>>,
         result: Arc<anyhow::Result<ExitStatus>>,
     },
+    LineOut {
+        application: Arc<RwLock<Application>>,
+        line: String,
+    },
+    ErrorLineOut {
+        application: Arc<RwLock<Application>>,
+        line: String,
+    },
 }
 
 #[async_trait]
@@ -31,12 +39,11 @@ pub trait AppEventHandler: Send + Sync + Debug {
 pub async fn send_event(
     app_lock: &Arc<RwLock<Application>>,
     event: AppEvent,
-) -> anyhow::Result<(), Arc<anyhow::Result<ExitStatus>>> {
+) -> anyhow::Result<()> {
     let event = Arc::new(event);
-    let dispatch_command = EventListenerCommand::Dispatch(event.clone());
     let app = app_lock.read().await;
 
-    app.send_to_listeners(dispatch_command).await?;
+    app.send_to_listeners(&event).await?;
     app.send_sync_event(&event).await;
 
     Ok(())
