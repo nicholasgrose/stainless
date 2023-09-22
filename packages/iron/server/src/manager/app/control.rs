@@ -2,7 +2,6 @@ use std::process::{ExitStatus, Stdio};
 use std::sync::Arc;
 
 use anyhow::Context;
-use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::io::{AsyncRead, BufWriter};
 use tokio::process::{Child, Command};
@@ -44,21 +43,9 @@ impl Application {
     ) -> anyhow::Result<Child> {
         let mut app_process = self.execute().await?;
 
-        let working_directory = self.working_directory().await?;
-        let log_file = File::create(working_directory.join("application.log")).await?;
-        let shareable_log_file = Arc::new(RwLock::new(log_file));
-
         self.spawn_stdin_handler(&mut app_process, receiver)?;
-        self.spawn_stdout_handler(
-            &mut app_process,
-            app_lock.clone(),
-            shareable_log_file.clone(),
-        )?;
-        self.spawn_stderr_handler(
-            &mut app_process,
-            app_lock.clone(),
-            shareable_log_file.clone(),
-        )?;
+        self.spawn_stdout_handler(&mut app_process, app_lock.clone())?;
+        self.spawn_stderr_handler(&mut app_process, app_lock.clone())?;
 
         Ok(app_process)
     }
@@ -100,6 +87,8 @@ impl Application {
                     .await
                     .context("error occurred while running application"),
             );
+
+            app_lock.write().await.state = ApplicationState::Inactive;
 
             safely!(send_event(
                 &app_lock,
@@ -147,15 +136,15 @@ impl Application {
         &self,
         process: &mut Child,
         app_lock: Arc<RwLock<Application>>,
-        app_log: Arc<RwLock<File>>,
     ) -> anyhow::Result<()> {
         let child_out = process
             .stdout
             .take()
             .context("new application process lacks stdout")?;
 
-        self.spawn_output_handler(child_out, app_lock, app_log, |application, line| {
-            AppEvent::LineOut { application, line }
+        self.spawn_output_handler(child_out, app_lock, |application, line| AppEvent::LineOut {
+            application,
+            line,
         })
     }
 
@@ -163,14 +152,13 @@ impl Application {
         &self,
         process: &mut Child,
         app_lock: Arc<RwLock<Application>>,
-        app_log: Arc<RwLock<File>>,
     ) -> anyhow::Result<()> {
         let child_out = process
             .stderr
             .take()
             .context("new application process lacks stdout")?;
 
-        self.spawn_output_handler(child_out, app_lock, app_log, |application, line| {
+        self.spawn_output_handler(child_out, app_lock, |application, line| {
             AppEvent::ErrorLineOut { application, line }
         })
     }
@@ -179,7 +167,6 @@ impl Application {
         &self,
         child_out: T,
         app_lock: Arc<RwLock<Application>>,
-        app_log: Arc<RwLock<File>>,
         event_provider: fn(Arc<RwLock<Application>>, String) -> AppEvent,
     ) -> anyhow::Result<()>
     where
@@ -198,12 +185,6 @@ impl Application {
                             return anyhow::Result::<()>::Ok(());
                         }
 
-                        app_log
-                            .write()
-                            .await
-                            .write_all(line.as_bytes())
-                            .await
-                            .context("failed to write to log file")?;
                         send_event(&app_lock, event_provider(app_lock.clone(), line.clone()))
                             .await?;
                     }

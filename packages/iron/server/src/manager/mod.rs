@@ -42,7 +42,7 @@ pub async fn execute_new(
     debug!("starting application");
 
     let app_id = app_settings.properties.id;
-    let app = Application::new(app_settings);
+    let app = Application::new(app_settings).await?;
     app.subscribe_async_handler(Arc::new(ManagerHandler {
         manager: manager.clone(),
     }));

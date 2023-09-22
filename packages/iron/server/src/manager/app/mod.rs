@@ -47,7 +47,7 @@ pub enum ApplicationState {
 }
 
 impl Application {
-    pub fn new(settings: AppCreationSettings) -> Self {
+    pub async fn new(settings: AppCreationSettings) -> anyhow::Result<Self> {
         let (sender, receiver) = broadcast::channel(4);
         let app = Application {
             span: Arc::new(info_span!(parent: None, "app", ?settings.properties)),
@@ -57,16 +57,17 @@ impl Application {
             sync_event_handlers: settings.sync_event_handlers,
         };
 
-        app.spawn_event_listener(receiver, Arc::<LogHandler>::default());
+        let log_handler = LogHandler::new(&app).await?;
+        app.spawn_event_listener(receiver, Arc::new(log_handler));
 
         for handler in settings.async_event_handlers {
             app.subscribe_async_handler(handler);
         }
 
-        app
+        Ok(app)
     }
 
-    async fn working_directory(&self) -> anyhow::Result<PathBuf> {
+    pub async fn working_directory(&self) -> anyhow::Result<PathBuf> {
         let settings = &self.properties;
         let path = format!("{}_{}", settings.name, settings.id).into();
         tokio::fs::create_dir_all(&path).await?;
