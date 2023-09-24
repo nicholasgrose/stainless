@@ -135,7 +135,9 @@ impl Application {
             .take()
             .context("new application process lacks stdout")?;
 
-        self.spawn_output_handler(child_out, app_lock, |line| LineType::Out(line))
+        self.spawn_output_handler(child_out, app_lock, |line| LineType::Out(line));
+
+        Ok(())
     }
 
     fn spawn_stderr_handler(
@@ -148,7 +150,9 @@ impl Application {
             .take()
             .context("new application process lacks stdout")?;
 
-        self.spawn_output_handler(child_out, app_lock, |line| LineType::Error(line))
+        self.spawn_output_handler(child_out, app_lock, |line| LineType::Error(line));
+
+        Ok(())
     }
 
     fn spawn_output_handler<T>(
@@ -156,8 +160,7 @@ impl Application {
         child_out: T,
         app_lock: Arc<RwLock<Application>>,
         event_provider: fn(String) -> LineType,
-    ) -> anyhow::Result<()>
-    where
+    ) where
         T: AsyncRead + Unpin + Send + 'static,
     {
         tokio::spawn(async move {
@@ -187,7 +190,5 @@ impl Application {
                 }
             }
         });
-
-        Ok(())
     }
 }

@@ -15,7 +15,7 @@ impl Application {
         let mut handler_pool = JoinSet::new();
 
         self.dispatch_sync_events(&mut handler_pool, event);
-        self.await_sync_handler_results(&mut handler_pool).await;
+        self.await_dispatch_results(&mut handler_pool).await;
     }
 
     fn dispatch_sync_events(&self, handler_pool: &mut JoinSet<()>, event: &Arc<AppEvent>) {
@@ -28,7 +28,7 @@ impl Application {
         }
     }
 
-    async fn await_sync_handler_results(&self, handler_pool: &mut JoinSet<()>) {
+    async fn await_dispatch_results(&self, handler_pool: &mut JoinSet<()>) {
         loop {
             match handler_pool.join_next().await {
                 None => {
