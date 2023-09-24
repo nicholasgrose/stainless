@@ -64,7 +64,7 @@ impl Application {
         &self,
         process: &mut Child,
         app_lock: &Arc<RwLock<Application>>,
-        mut input_receiver: Receiver<String>,
+        input_receiver: Receiver<String>,
     ) -> anyhow::Result<()> {
         let stdio_in = process
             .stdin

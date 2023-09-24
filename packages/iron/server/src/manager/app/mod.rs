@@ -46,9 +46,11 @@ pub enum ApplicationState {
     },
 }
 
+const EVENT_CHANNEL_SIZE: usize = 4;
+
 impl Application {
     pub async fn new(settings: AppCreationSettings) -> anyhow::Result<Self> {
-        let (sender, receiver) = broadcast::channel(4);
+        let (sender, receiver) = broadcast::channel(EVENT_CHANNEL_SIZE);
         let app = Application {
             span: Arc::new(info_span!(parent: None, "app", ?settings.properties)),
             properties: settings.properties,
@@ -57,14 +59,25 @@ impl Application {
             sync_event_handlers: settings.sync_event_handlers,
         };
 
-        let log_handler = LogHandler::new(&app).await?;
-        app.spawn_event_listener(receiver, Arc::new(log_handler));
-
-        for handler in settings.async_event_handlers {
-            app.subscribe_async_handler(handler);
-        }
+        app.spawn_starting_listeners(settings.async_event_handlers, receiver)
+            .await?;
 
         Ok(app)
+    }
+
+    async fn spawn_starting_listeners(
+        &self,
+        starting_listeners: Vec<Arc<dyn AppEventHandler>>,
+        event_receiver: broadcast::Receiver<Arc<AppEvent>>,
+    ) -> anyhow::Result<()> {
+        let log_handler = LogHandler::new(self).await?;
+        self.spawn_event_listener(event_receiver, Arc::new(log_handler));
+
+        for handler in starting_listeners {
+            self.subscribe_async_handler(handler);
+        }
+
+        Ok(())
     }
 
     pub async fn working_directory(&self) -> anyhow::Result<PathBuf> {

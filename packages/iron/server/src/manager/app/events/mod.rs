@@ -9,7 +9,6 @@ use tracing::{instrument, warn};
 use crate::manager::app::Application;
 
 pub mod asynchronous;
-pub mod listener;
 pub mod synchronous;
 
 #[derive(Debug, Clone)]
@@ -50,7 +49,7 @@ pub async fn send_event(
     });
     let app = app_lock.read().await;
 
-    app.send_to_listeners(&event).await?;
+    app.send_async_event(&event).await?;
     app.send_sync_event(&event).await;
 
     Ok(())

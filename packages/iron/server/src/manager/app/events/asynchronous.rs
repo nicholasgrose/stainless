@@ -1,13 +1,24 @@
+use anyhow::Context;
 use std::sync::Arc;
 
 use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
+use tracing::instrument;
 
 use crate::manager::app::events::AppEventHandler;
 use crate::manager::app::events::{dispatch_task, AppEvent};
 use crate::manager::app::Application;
 
 impl Application {
+    #[instrument]
+    pub async fn send_async_event(&self, event: &Arc<AppEvent>) -> anyhow::Result<()> {
+        self.events
+            .send(event.clone())
+            .context("failed to broadcast app event")?;
+
+        Ok(())
+    }
+
     pub fn subscribe_async_handler(
         &self,
         handler: Arc<dyn AppEventHandler>,
