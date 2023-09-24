@@ -13,22 +13,26 @@ pub mod listener;
 pub mod synchronous;
 
 #[derive(Debug, Clone)]
-pub enum AppEvent {
-    Start {
-        application: Arc<RwLock<Application>>,
-    },
+pub struct AppEvent {
+    pub application: Arc<RwLock<Application>>,
+    pub event_type: AppEventType,
+}
+
+#[derive(Debug, Clone)]
+pub enum AppEventType {
+    Start {},
     End {
-        application: Arc<RwLock<Application>>,
         result: Arc<anyhow::Result<ExitStatus>>,
     },
-    LineOut {
-        application: Arc<RwLock<Application>>,
-        line: String,
+    Print {
+        line: LineType,
     },
-    ErrorLineOut {
-        application: Arc<RwLock<Application>>,
-        line: String,
-    },
+}
+
+#[derive(Debug, Clone)]
+pub enum LineType {
+    Out(String),
+    Error(String),
 }
 
 #[async_trait]
@@ -38,9 +42,12 @@ pub trait AppEventHandler: Send + Sync + Debug {
 
 pub async fn send_event(
     app_lock: &Arc<RwLock<Application>>,
-    event: AppEvent,
+    event: AppEventType,
 ) -> anyhow::Result<()> {
-    let event = Arc::new(event);
+    let event = Arc::new(AppEvent {
+        application: app_lock.clone(),
+        event_type: event,
+    });
     let app = app_lock.read().await;
 
     app.send_to_listeners(&event).await?;

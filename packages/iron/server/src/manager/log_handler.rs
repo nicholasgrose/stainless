@@ -7,7 +7,7 @@ use tokio::io::AsyncWriteExt;
 use tokio::sync::RwLock;
 use tracing::{info, warn};
 
-use crate::manager::app::events::{AppEvent, AppEventHandler};
+use crate::manager::app::events::{AppEvent, AppEventHandler, AppEventType, LineType};
 use crate::manager::app::Application;
 
 #[derive(Debug)]
@@ -29,14 +29,11 @@ impl LogHandler {
 #[async_trait]
 impl AppEventHandler for LogHandler {
     async fn handle(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
-        match &*event {
-            AppEvent::Start { .. } => {
+        match &event.event_type {
+            AppEventType::Start { .. } => {
                 info!("app started")
             }
-            AppEvent::End {
-                application: _,
-                result,
-            } => match &**result {
+            AppEventType::End { result } => match &**result {
                 Ok(status) => {
                     info!(?status)
                 }
@@ -44,27 +41,22 @@ impl AppEventHandler for LogHandler {
                     info!(?error)
                 }
             },
-            AppEvent::LineOut {
-                application: _application,
-                line,
-            } => {
-                info!(line);
+            AppEventType::Print { line } => {
+                let text = match line {
+                    LineType::Out(out_line) => {
+                        info!(?line);
+                        out_line
+                    }
+                    LineType::Error(err_line) => {
+                        warn!(?line);
+                        err_line
+                    }
+                };
+
                 self.log_file
                     .write()
                     .await
-                    .write_all(line.as_bytes())
-                    .await
-                    .context("failed to write to log file")?;
-            }
-            AppEvent::ErrorLineOut {
-                application: _application,
-                line,
-            } => {
-                warn!(line);
-                self.log_file
-                    .write()
-                    .await
-                    .write_all(line.as_bytes())
+                    .write_all(text.as_bytes())
                     .await
                     .context("failed to write to log file")?;
             }

@@ -10,8 +10,7 @@ use tokio::sync::{mpsc, RwLock};
 use tokio::task::JoinHandle;
 use tracing::warn;
 
-use crate::manager::app::events::send_event;
-use crate::manager::app::events::AppEvent;
+use crate::manager::app::events::{send_event, AppEventType, LineType};
 use crate::manager::app::{Application, ApplicationState};
 
 macro_rules! safely {
@@ -74,12 +73,7 @@ impl Application {
         tokio::spawn(async move {
             let _enter = app_span.enter();
 
-            safely!(send_event(
-                &app_lock,
-                AppEvent::Start {
-                    application: app_lock.clone(),
-                }
-            ));
+            safely!(send_event(&app_lock, AppEventType::Start {}));
 
             let execution_result = Arc::new(
                 app_process
@@ -92,8 +86,7 @@ impl Application {
 
             safely!(send_event(
                 &app_lock,
-                AppEvent::End {
-                    application: app_lock.clone(),
+                AppEventType::End {
                     result: execution_result.clone(),
                 }
             ));
@@ -142,10 +135,7 @@ impl Application {
             .take()
             .context("new application process lacks stdout")?;
 
-        self.spawn_output_handler(child_out, app_lock, |application, line| AppEvent::LineOut {
-            application,
-            line,
-        })
+        self.spawn_output_handler(child_out, app_lock, |line| LineType::Out(line))
     }
 
     fn spawn_stderr_handler(
@@ -158,16 +148,14 @@ impl Application {
             .take()
             .context("new application process lacks stdout")?;
 
-        self.spawn_output_handler(child_out, app_lock, |application, line| {
-            AppEvent::ErrorLineOut { application, line }
-        })
+        self.spawn_output_handler(child_out, app_lock, |line| LineType::Error(line))
     }
 
     fn spawn_output_handler<T>(
         &self,
         child_out: T,
         app_lock: Arc<RwLock<Application>>,
-        event_provider: fn(Arc<RwLock<Application>>, String) -> AppEvent,
+        event_provider: fn(String) -> LineType,
     ) -> anyhow::Result<()>
     where
         T: AsyncRead + Unpin + Send + 'static,
@@ -185,8 +173,13 @@ impl Application {
                             return anyhow::Result::<()>::Ok(());
                         }
 
-                        send_event(&app_lock, event_provider(app_lock.clone(), line.clone()))
-                            .await?;
+                        send_event(
+                            &app_lock,
+                            AppEventType::Print {
+                                line: event_provider(line.clone()),
+                            },
+                        )
+                        .await?;
                     }
                     Err(error) => {
                         warn!(?error);
