@@ -16,7 +16,7 @@ impl AppEventHandler for ManagerHandler {
         match &event.event_type {
             AppEventType::Start { .. } => {}
             AppEventType::End { .. } => {
-                let app_id = &event.application.read().await.config.properties.id;
+                let app_id = &event.application.config.properties.id;
 
                 self.manager.remove(app_id).await;
             }

@@ -7,25 +7,28 @@ use crate::manager::app::events::{AppEvent, AppEventHandler};
 use crate::manager::app::Application;
 
 impl Application {
-    pub fn _subscribe_sync_handler(&mut self, handler: Arc<dyn AppEventHandler>) {
-        self.events.sync_handlers.push(handler);
+    pub async fn _subscribe_sync_handler(&self, handler: Arc<dyn AppEventHandler>) {
+        self.events.write().await.sync_handlers.push(handler);
     }
 
     pub async fn send_sync_event(&self, event: &Arc<AppEvent>) {
-        let mut handler_pool = JoinSet::new();
-
-        self.dispatch_sync_events(&mut handler_pool, event);
+        let mut handler_pool = self.dispatch_sync_events(event).await;
         self.await_dispatch_results(&mut handler_pool).await;
     }
 
-    fn dispatch_sync_events(&self, handler_pool: &mut JoinSet<()>, event: &Arc<AppEvent>) {
-        for handler in &self.events.sync_handlers {
+    async fn dispatch_sync_events(&self, event: &Arc<AppEvent>) -> JoinSet<()> {
+        let mut handler_pool = JoinSet::new();
+        let sync_handlers = &self.events.read().await.sync_handlers;
+
+        for handler in sync_handlers {
             let app_span = self.config.span.clone();
             let dispatch_handler = handler.clone();
             let dispatch_event = event.clone();
 
             handler_pool.spawn(dispatch_task(dispatch_handler, dispatch_event, app_span));
         }
+
+        handler_pool
     }
 
     async fn await_dispatch_results(&self, handler_pool: &mut JoinSet<()>) {

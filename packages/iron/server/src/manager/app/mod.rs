@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use std::process::ExitStatus;
 use std::sync::Arc;
 
-use tokio::sync::broadcast;
 use tokio::sync::mpsc;
+use tokio::sync::{broadcast, RwLock};
 use tokio::task::JoinHandle;
 use tracing::info_span;
 use uuid::Uuid;
@@ -24,8 +24,8 @@ pub struct AppCreationSettings {
 #[derive(Debug)]
 pub struct Application {
     pub config: AppConfig,
-    pub events: AppEvents,
-    pub state: ApplicationState,
+    pub events: RwLock<AppEvents>,
+    pub state: RwLock<AppState>,
 }
 
 #[derive(Debug)]
@@ -43,7 +43,12 @@ pub struct AppProperties {
 }
 
 #[derive(Debug)]
-pub enum ApplicationState {
+pub struct AppState {
+    run_state: AppRunState,
+}
+
+#[derive(Debug)]
+pub enum AppRunState {
     Inactive,
     Active {
         app_task: JoinHandle<Arc<anyhow::Result<ExitStatus>>>,
@@ -72,8 +77,12 @@ impl Application {
             events: AppEvents {
                 async_channel: sender,
                 sync_handlers: settings.sync_event_handlers,
-            },
-            state: ApplicationState::Inactive,
+            }
+            .into(),
+            state: AppState {
+                run_state: AppRunState::Inactive,
+            }
+            .into(),
         };
 
         tokio::fs::create_dir_all(&app.config.directory).await?;
@@ -92,7 +101,7 @@ impl Application {
         self.spawn_event_listener(event_receiver, Arc::new(log_handler));
 
         for handler in starting_listeners {
-            self.subscribe_async_handler(handler);
+            self.subscribe_async_handler(handler).await;
         }
 
         Ok(())

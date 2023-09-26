@@ -5,13 +5,12 @@ use anyhow::Context;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::io::{AsyncRead, BufWriter};
 use tokio::process::{Child, ChildStdin, Command};
-use tokio::sync::mpsc::Receiver;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tracing::warn;
 
 use crate::manager::app::events::{send_event, AppEventType, LineType};
-use crate::manager::app::{Application, ApplicationState};
+use crate::manager::app::{AppRunState, Application};
 
 const INPUT_BUFFER_SIZE: usize = 100;
 
@@ -24,11 +23,11 @@ macro_rules! safely {
 }
 
 impl Application {
-    pub async fn start(&mut self, app_lock: Arc<RwLock<Application>>) -> anyhow::Result<()> {
+    pub async fn start(&self, app: Arc<Application>) -> anyhow::Result<()> {
         let (sender, receiver) = tokio::sync::mpsc::channel(INPUT_BUFFER_SIZE);
-        let app_task = self.spawn_app_tasks(app_lock, receiver).await?;
+        let app_task = self.spawn_app_tasks(app, receiver).await?;
 
-        self.state = ApplicationState::Active {
+        self.state.write().await.run_state = AppRunState::Active {
             app_task,
             input_sender: sender,
         };
@@ -38,13 +37,13 @@ impl Application {
 
     async fn spawn_app_tasks(
         &self,
-        app_lock: Arc<RwLock<Application>>,
+        app: Arc<Application>,
         input_receiver: mpsc::Receiver<String>,
     ) -> anyhow::Result<JoinHandle<Arc<anyhow::Result<ExitStatus>>>> {
         let mut app_process = self.execute().await?;
-        self.spawn_io_handlers(&mut app_process, &app_lock, input_receiver)?;
+        self.spawn_io_handlers(&mut app_process, &app, input_receiver)?;
 
-        Ok(self.spawn_process_task(app_lock, app_process))
+        Ok(self.spawn_process_task(app, app_process))
     }
 
     async fn execute(&self) -> anyhow::Result<Child> {
@@ -62,8 +61,8 @@ impl Application {
     fn spawn_io_handlers(
         &self,
         process: &mut Child,
-        app_lock: &Arc<RwLock<Application>>,
-        input_receiver: Receiver<String>,
+        app: &Arc<Application>,
+        input_receiver: mpsc::Receiver<String>,
     ) -> anyhow::Result<()> {
         let stdio_in = process
             .stdin
@@ -79,13 +78,17 @@ impl Application {
             .context("new application process lacks stderr")?;
 
         self.spawn_input_handler(stdio_in, input_receiver);
-        self.spawn_output_handler(stdio_out, app_lock.clone(), |line| LineType::Out(line));
-        self.spawn_output_handler(stdio_err, app_lock.clone(), |line| LineType::Error(line));
+        self.spawn_output_handler(stdio_out, app.clone(), |line| LineType::Out(line));
+        self.spawn_output_handler(stdio_err, app.clone(), |line| LineType::Error(line));
 
         Ok(())
     }
 
-    fn spawn_input_handler(&self, child_in: ChildStdin, mut input_receiver: Receiver<String>) {
+    fn spawn_input_handler(
+        &self,
+        child_in: ChildStdin,
+        mut input_receiver: mpsc::Receiver<String>,
+    ) {
         tokio::spawn(async move {
             let mut input_writer = BufWriter::new(child_in);
 
@@ -108,7 +111,7 @@ impl Application {
     fn spawn_output_handler<T>(
         &self,
         child_out: T,
-        app_lock: Arc<RwLock<Application>>,
+        app_lock: Arc<Application>,
         event_provider: fn(String) -> LineType,
     ) where
         T: AsyncRead + Unpin + Send + 'static,
@@ -144,7 +147,7 @@ impl Application {
 
     fn spawn_process_task(
         &self,
-        app_lock: Arc<RwLock<Application>>,
+        app: Arc<Application>,
         mut app_process: Child,
     ) -> JoinHandle<Arc<anyhow::Result<ExitStatus>>> {
         let _enter = self.config.span.enter();
@@ -153,7 +156,7 @@ impl Application {
         tokio::spawn(async move {
             let _enter = app_span.enter();
 
-            safely!(send_event(&app_lock, AppEventType::Start {}));
+            safely!(send_event(&app, AppEventType::Start {}));
 
             let execution_result = Arc::new(
                 app_process
@@ -162,10 +165,10 @@ impl Application {
                     .context("error occurred while running application"),
             );
 
-            app_lock.write().await.state = ApplicationState::Inactive;
+            app.state.write().await.run_state = AppRunState::Inactive;
 
             safely!(send_event(
-                &app_lock,
+                &app,
                 AppEventType::End {
                     result: execution_result.clone(),
                 }

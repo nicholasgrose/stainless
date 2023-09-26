@@ -13,6 +13,8 @@ impl Application {
     #[instrument]
     pub async fn send_async_event(&self, event: &Arc<AppEvent>) -> anyhow::Result<()> {
         self.events
+            .read()
+            .await
             .async_channel
             .send(event.clone())
             .context("failed to broadcast app event")?;
@@ -20,11 +22,11 @@ impl Application {
         Ok(())
     }
 
-    pub fn subscribe_async_handler(
+    pub async fn subscribe_async_handler(
         &self,
         handler: Arc<dyn AppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
-        let receiver = self.events.async_channel.subscribe();
+        let receiver = self.events.write().await.async_channel.subscribe();
 
         self.spawn_event_listener(receiver, handler)
     }
