@@ -20,7 +20,7 @@ pub struct ApplicationManager {
 
 impl ApplicationManager {
     pub async fn add(&self, app: Application) -> Option<Arc<RwLock<Application>>> {
-        let app_id = app.properties.id;
+        let app_id = app.config.properties.id;
         let thread_safe_app = RwLock::new(app).into();
 
         self.applications

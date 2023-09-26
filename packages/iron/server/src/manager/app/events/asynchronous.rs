@@ -1,6 +1,6 @@
-use anyhow::Context;
 use std::sync::Arc;
 
+use anyhow::Context;
 use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
 use tracing::instrument;
@@ -13,6 +13,7 @@ impl Application {
     #[instrument]
     pub async fn send_async_event(&self, event: &Arc<AppEvent>) -> anyhow::Result<()> {
         self.events
+            .async_channel
             .send(event.clone())
             .context("failed to broadcast app event")?;
 
@@ -23,7 +24,7 @@ impl Application {
         &self,
         handler: Arc<dyn AppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
-        let receiver = self.events.subscribe();
+        let receiver = self.events.async_channel.subscribe();
 
         self.spawn_event_listener(receiver, handler)
     }
@@ -33,8 +34,8 @@ impl Application {
         mut receiver: broadcast::Receiver<Arc<AppEvent>>,
         handler: Arc<dyn AppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
-        let _enter = self.span.enter();
-        let app_span = self.span.clone();
+        let _enter = self.config.span.enter();
+        let app_span = self.config.span.clone();
 
         tokio::spawn(async move {
             let _enter = app_span.enter();

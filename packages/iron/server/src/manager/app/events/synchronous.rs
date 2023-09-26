@@ -8,7 +8,7 @@ use crate::manager::app::Application;
 
 impl Application {
     pub fn _subscribe_sync_handler(&mut self, handler: Arc<dyn AppEventHandler>) {
-        self.sync_event_handlers.push(handler);
+        self.events.sync_handlers.push(handler);
     }
 
     pub async fn send_sync_event(&self, event: &Arc<AppEvent>) {
@@ -19,8 +19,8 @@ impl Application {
     }
 
     fn dispatch_sync_events(&self, handler_pool: &mut JoinSet<()>, event: &Arc<AppEvent>) {
-        for handler in &self.sync_event_handlers {
-            let app_span = self.span.clone();
+        for handler in &self.events.sync_handlers {
+            let app_span = self.config.span.clone();
             let dispatch_handler = handler.clone();
             let dispatch_event = event.clone();
 

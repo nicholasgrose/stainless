@@ -48,12 +48,11 @@ impl Application {
     }
 
     async fn execute(&self) -> anyhow::Result<Child> {
-        let working_directory = self.working_directory().await?;
-        let command_args: Vec<&str> = self.properties.command.split(' ').collect();
+        let command_args: Vec<&str> = self.config.properties.command.split(' ').collect();
 
         Ok(Command::new(command_args[0])
             .args(&command_args[1..])
-            .current_dir(&working_directory)
+            .current_dir(&self.config.directory)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -148,8 +147,8 @@ impl Application {
         app_lock: Arc<RwLock<Application>>,
         mut app_process: Child,
     ) -> JoinHandle<Arc<anyhow::Result<ExitStatus>>> {
-        let _enter = self.span.enter();
-        let app_span = self.span.clone();
+        let _enter = self.config.span.enter();
+        let app_span = self.config.span.clone();
 
         tokio::spawn(async move {
             let _enter = app_span.enter();

@@ -23,11 +23,16 @@ pub struct AppCreationSettings {
 
 #[derive(Debug)]
 pub struct Application {
-    pub span: Arc<tracing::Span>,
-    pub properties: AppProperties,
+    pub config: AppConfig,
+    pub events: AppEvents,
     pub state: ApplicationState,
-    pub events: broadcast::Sender<Arc<AppEvent>>,
-    pub sync_event_handlers: Vec<Arc<dyn AppEventHandler>>,
+}
+
+#[derive(Debug)]
+pub struct AppConfig {
+    pub properties: AppProperties,
+    pub span: Arc<tracing::Span>,
+    pub directory: PathBuf,
 }
 
 #[derive(Debug)]
@@ -46,19 +51,32 @@ pub enum ApplicationState {
     },
 }
 
-const EVENT_CHANNEL_SIZE: usize = 4;
+#[derive(Debug)]
+pub struct AppEvents {
+    pub async_channel: broadcast::Sender<Arc<AppEvent>>,
+    pub sync_handlers: Vec<Arc<dyn AppEventHandler>>,
+}
+
+const EVENT_CHANNEL_SIZE: usize = 16;
 
 impl Application {
     pub async fn new(settings: AppCreationSettings) -> anyhow::Result<Self> {
         let (sender, receiver) = broadcast::channel(EVENT_CHANNEL_SIZE);
         let app = Application {
-            span: Arc::new(info_span!(parent: None, "app", ?settings.properties)),
-            properties: settings.properties,
+            config: AppConfig {
+                span: Arc::new(info_span!(parent: None, "app", ?settings.properties)),
+                directory: format!("{}_{}", settings.properties.name, settings.properties.id)
+                    .into(),
+                properties: settings.properties,
+            },
+            events: AppEvents {
+                async_channel: sender,
+                sync_handlers: settings.sync_event_handlers,
+            },
             state: ApplicationState::Inactive,
-            events: sender,
-            sync_event_handlers: settings.sync_event_handlers,
         };
 
+        tokio::fs::create_dir_all(&app.config.directory).await?;
         app.spawn_starting_listeners(settings.async_event_handlers, receiver)
             .await?;
 
@@ -78,13 +96,5 @@ impl Application {
         }
 
         Ok(())
-    }
-
-    pub async fn working_directory(&self) -> anyhow::Result<PathBuf> {
-        let settings = &self.properties;
-        let path = format!("{}_{}", settings.name, settings.id).into();
-        tokio::fs::create_dir_all(&path).await?;
-
-        Ok(path)
     }
 }

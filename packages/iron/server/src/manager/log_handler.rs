@@ -17,13 +17,17 @@ pub struct LogHandler {
 
 impl LogHandler {
     pub async fn new(app: &Application) -> anyhow::Result<Self> {
-        let working_directory = app.working_directory().await?;
-        let log_file = File::create(working_directory.join("application.log")).await?;
-
         Ok(LogHandler {
-            log_file: RwLock::new(log_file),
+            log_file: RwLock::new(create_log_file(app).await?),
         })
     }
+}
+
+async fn create_log_file(app: &Application) -> anyhow::Result<File> {
+    let log_file_path = &app.config.directory.join("application.log");
+    let log_file = File::create(log_file_path).await?;
+
+    Ok(log_file)
 }
 
 #[async_trait]
