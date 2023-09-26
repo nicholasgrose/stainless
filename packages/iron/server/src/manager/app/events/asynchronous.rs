@@ -26,7 +26,7 @@ impl Application {
         &self,
         handler: Arc<dyn AppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
-        let receiver = self.events.write().await.async_channel.subscribe();
+        let receiver = self.events.read().await.async_channel.subscribe();
 
         self.spawn_event_listener(receiver, handler)
     }
