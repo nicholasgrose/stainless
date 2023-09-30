@@ -13,10 +13,11 @@ pub struct AppCreationSettings {
 
 const EVENT_CHANNEL_SIZE: usize = 16;
 
-impl Application {
-    pub async fn new(settings: AppCreationSettings) -> anyhow::Result<Self> {
+impl From<AppCreationSettings> for Application {
+    fn from(settings: AppCreationSettings) -> Self {
         let (sender, _receiver) = broadcast::channel(EVENT_CHANNEL_SIZE);
-        let app = Application {
+
+        Application {
             config: AppConfig {
                 span: info_span!(parent: None, "app", ?settings.properties).into(),
                 directory: format!("{}_{}", settings.properties.name, settings.properties.id)
@@ -30,8 +31,6 @@ impl Application {
             state: RwLock::new(AppState {
                 run_state: AppRunState::NotStarted,
             }),
-        };
-
-        Ok(app)
+        }
     }
 }
