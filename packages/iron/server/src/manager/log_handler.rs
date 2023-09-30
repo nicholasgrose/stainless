@@ -24,7 +24,9 @@ impl LogHandler {
 }
 
 async fn create_log_file(app: &Application) -> anyhow::Result<File> {
-    let log_file_path = &app.config.directory.join("application.log");
+    let app_directory = &app.config.directory;
+    let log_file_path = app_directory.join("application.log");
+    tokio::fs::create_dir_all(app_directory).await?;
     let log_file = File::create(log_file_path).await?;
 
     Ok(log_file)

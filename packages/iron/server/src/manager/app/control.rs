@@ -23,16 +23,44 @@ macro_rules! safely {
 }
 
 impl Application {
-    pub async fn start(&self, app: Arc<Application>) -> anyhow::Result<()> {
+    pub async fn start(&self, app: &Arc<Application>) -> anyhow::Result<()> {
+        let mut state = self.state.write().await;
+
+        match state.run_state {
+            AppRunState::NotStarted => {
+                self.initialize_app().await?;
+                state.run_state = self.start_new_process(app.clone()).await?;
+            }
+            AppRunState::Running { .. } => {}
+            AppRunState::Stopped => {
+                state.run_state = self.start_new_process(app.clone()).await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn initialize_app(&self) -> anyhow::Result<()> {
+        tokio::fs::create_dir_all(&self.config.directory).await?;
+        self.spawn_starting_listeners().await;
+
+        Ok(())
+    }
+
+    async fn spawn_starting_listeners(&self) {
+        for handler in &self.events.handlers.read().await.async_handlers {
+            self.spawn_event_listener(handler.clone());
+        }
+    }
+
+    pub async fn start_new_process(&self, app: Arc<Application>) -> anyhow::Result<AppRunState> {
         let (sender, receiver) = tokio::sync::mpsc::channel(INPUT_BUFFER_SIZE);
         let app_task = self.spawn_app_tasks(app, receiver).await?;
 
-        self.state.write().await.run_state = AppRunState::Active {
+        Ok(AppRunState::Running {
             app_task,
             input_sender: sender,
-        };
-
-        Ok(())
+        })
     }
 
     async fn spawn_app_tasks(
@@ -78,8 +106,8 @@ impl Application {
             .context("new application process lacks stderr")?;
 
         self.spawn_input_handler(stdio_in, input_receiver);
-        self.spawn_output_handler(stdio_out, app.clone(), |line| LineType::Out(line));
-        self.spawn_output_handler(stdio_err, app.clone(), |line| LineType::Error(line));
+        self.spawn_output_handler(stdio_out, app.clone(), LineType::Out);
+        self.spawn_output_handler(stdio_err, app.clone(), LineType::Error);
 
         Ok(())
     }
@@ -165,7 +193,7 @@ impl Application {
                     .context("error occurred while running application"),
             );
 
-            app.state.write().await.run_state = AppRunState::Inactive;
+            app.state.write().await.run_state = AppRunState::Stopped;
 
             safely!(send_event(
                 &app,

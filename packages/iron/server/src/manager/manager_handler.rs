@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -5,9 +6,14 @@ use async_trait::async_trait;
 use crate::manager::app::events::{AppEvent, AppEventHandler, AppEventType};
 use crate::manager::ApplicationManager;
 
-#[derive(Debug)]
 pub struct ManagerHandler {
     pub manager: Arc<ApplicationManager>,
+}
+
+impl Debug for ManagerHandler {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(stringify!(ManagerHandler))
+    }
 }
 
 #[async_trait]

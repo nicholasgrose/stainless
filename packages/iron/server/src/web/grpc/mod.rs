@@ -7,7 +7,7 @@ use entity::application::ActiveModel as ApplicationModel;
 use iron_api::ServerDefinition;
 
 use crate::database::insert::InsertModel;
-use crate::manager::app::AppCreationSettings;
+use crate::manager::app::create::AppCreationSettings;
 
 pub mod minecraft;
 

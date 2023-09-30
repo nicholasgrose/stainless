@@ -9,8 +9,9 @@ use entity::paper_mc_server::ActiveModel as PaperMcServerModel;
 use iron_api::minecraft_service::{PaperMcProject, PaperMcServerDefinition};
 
 use crate::database::insert::{Insert, InsertModel};
+use crate::manager::app::create::AppCreationSettings;
 use crate::manager::app::events::{AppEvent, AppEventHandler};
-use crate::manager::app::{AppCreationSettings, AppProperties};
+use crate::manager::app::{AppEventHandlers, AppProperties};
 use crate::web::grpc::minecraft::aikars_flags::AikarsFlags;
 use crate::web::grpc::AppCreateContext;
 
@@ -39,8 +40,10 @@ impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefiniti
                     name: server_definition.name.clone(),
                     command: AikarsFlags::try_from(minecraft_server_definition)?.to_string(),
                 },
-                async_event_handlers: vec![Arc::<PaperMcHandler>::default()],
-                sync_event_handlers: vec![],
+                handlers: AppEventHandlers {
+                    async_handlers: vec![Arc::<PaperMcHandler>::default()],
+                    sync_handlers: vec![],
+                },
             },
             message: papermc_definition,
         })

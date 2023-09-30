@@ -6,7 +6,9 @@ use tokio::sync::RwLock;
 use tracing::{debug, instrument};
 use uuid::Uuid;
 
-use crate::manager::app::{AppCreationSettings, Application};
+use crate::manager::app::create::AppCreationSettings;
+use crate::manager::app::Application;
+use crate::manager::log_handler::LogHandler;
 use crate::manager::manager_handler::ManagerHandler;
 
 pub mod app;
@@ -34,7 +36,7 @@ impl ApplicationManager {
     }
 }
 
-#[instrument]
+#[instrument(skip(manager))]
 pub async fn execute_new(
     manager: &Arc<ApplicationManager>,
     app_settings: AppCreationSettings,
@@ -47,12 +49,14 @@ pub async fn execute_new(
         manager: manager.clone(),
     }))
     .await;
+    app.subscribe_async_handler(Arc::new(LogHandler::new(&app).await?))
+        .await;
 
     manager.add(app).await;
 
     let apps = manager.applications.read().await;
     if let Some(app) = apps.get(&app_id) {
-        app.start(app.clone()).await?;
+        app.start(app).await?;
     }
 
     Ok(())
