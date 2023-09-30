@@ -32,7 +32,7 @@ impl Application {
                 state.run_state = self.start_new_process(app.clone()).await?;
             }
             AppRunState::Running { .. } => {}
-            AppRunState::Stopped => {
+            AppRunState::Stopped { .. } => {
                 state.run_state = self.start_new_process(app.clone()).await?;
             }
         }
@@ -193,7 +193,9 @@ impl Application {
                     .context("error occurred while running application"),
             );
 
-            app.state.write().await.run_state = AppRunState::Stopped;
+            app.state.write().await.run_state = AppRunState::Stopped {
+                result: execution_result.clone(),
+            };
 
             safely!(send_event(
                 &app,

@@ -32,7 +32,7 @@ impl Application {
             AppRunState::Running { .. } => {
                 self.spawn_event_listener(handler);
             }
-            AppRunState::Stopped => {
+            AppRunState::Stopped { .. } => {
                 self.spawn_event_listener(handler);
             }
         }

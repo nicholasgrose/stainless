@@ -46,7 +46,9 @@ pub enum AppRunState {
         app_task: JoinHandle<Arc<anyhow::Result<ExitStatus>>>,
         input_sender: mpsc::Sender<String>,
     },
-    Stopped,
+    Stopped {
+        result: Arc<anyhow::Result<ExitStatus>>,
+    },
 }
 
 #[derive(Debug)]
