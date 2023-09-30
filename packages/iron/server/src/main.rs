@@ -2,7 +2,7 @@
 
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::EnvFilter;
+use tracing_subscriber::{EnvFilter, Layer};
 
 use crate::web::IronGrpcService;
 
@@ -18,10 +18,8 @@ async fn main() -> anyhow::Result<()> {
 
 fn start_logging() {
     let console_layer = console_subscriber::spawn();
-
     tracing_subscriber::registry()
-        .with(EnvFilter::from_default_env())
         .with(console_layer)
-        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::fmt::layer().with_filter(EnvFilter::from_default_env()))
         .init();
 }
