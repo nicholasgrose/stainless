@@ -44,6 +44,17 @@ pub async fn send_event(app: &Arc<Application>, event: AppEventType) -> anyhow::
         event_type: event,
     });
 
+    send_to_handlers(app, Some(event)).await
+}
+
+pub async fn close_event_stream(app: &Arc<Application>) -> anyhow::Result<()> {
+    send_to_handlers(app, None).await
+}
+
+async fn send_to_handlers(
+    app: &Arc<Application>,
+    event: Option<Arc<AppEvent>>,
+) -> anyhow::Result<()> {
     app.send_async_event(&event).await?;
     app.send_sync_event(&event).await;
 

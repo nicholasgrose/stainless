@@ -10,7 +10,7 @@ use crate::manager::app::{AppRunState, Application};
 
 impl Application {
     #[instrument]
-    pub async fn send_async_event(&self, event: &Arc<AppEvent>) -> anyhow::Result<()> {
+    pub async fn send_async_event(&self, event: &Option<Arc<AppEvent>>) -> anyhow::Result<()> {
         self.events
             .async_channel
             .send(event.clone())
@@ -51,13 +51,20 @@ impl Application {
             let _enter = app_span.enter();
 
             loop {
-                let event = receiver.recv().await?;
+                let next_event = receiver.recv().await?;
 
-                tokio::spawn(dispatch_task(
-                    handler.clone(),
-                    event.clone(),
-                    app_span.clone(),
-                ));
+                match next_event {
+                    None => {
+                        return Ok(());
+                    }
+                    Some(event) => {
+                        tokio::spawn(dispatch_task(
+                            handler.clone(),
+                            event.clone(),
+                            app_span.clone(),
+                        ));
+                    }
+                }
             }
         })
     }

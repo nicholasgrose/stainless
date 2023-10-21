@@ -4,6 +4,7 @@ use std::fmt::{Debug, Display};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use anyhow::Context;
 use http::Uri;
@@ -88,7 +89,7 @@ impl IronGrpcService {
         let mut db_connect_options = ConnectOptions::new(self.database_uri.to_string());
         db_connect_options.sqlx_logging_level(LevelFilter::Debug);
         let db = IronDatabase::from(Database::connect(db_connect_options).await?).into();
-        let app_manager = ApplicationManager::default().into();
+        let app_manager = Arc::new(ApplicationManager::default());
         let tls_config = self.load_tls_config().await?;
 
         Server::builder()

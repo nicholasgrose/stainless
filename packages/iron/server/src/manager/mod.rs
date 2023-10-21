@@ -36,7 +36,7 @@ impl ApplicationManager {
     }
 }
 
-#[instrument(skip(manager))]
+#[instrument]
 pub async fn execute_new(
     manager: &Arc<ApplicationManager>,
     app_settings: AppCreationSettings,

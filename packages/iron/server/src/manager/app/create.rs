@@ -26,7 +26,7 @@ impl From<AppCreationSettings> for Application {
             },
             events: AppEvents {
                 async_channel: sender,
-                handlers: settings.handlers.into(),
+                handlers: RwLock::new(settings.handlers),
             },
             state: RwLock::new(AppState {
                 run_state: AppRunState::NotStarted,

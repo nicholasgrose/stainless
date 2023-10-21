@@ -40,7 +40,7 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
             .await
             .map_err(to_tonic_status)?;
 
-        return Ok(Response::new(ServerCreateResponse { id: id.to_string() }));
+        Ok(Response::new(ServerCreateResponse { id: id.to_string() }))
     }
 }
 

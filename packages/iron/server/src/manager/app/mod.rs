@@ -36,7 +36,7 @@ pub struct AppProperties {
 
 #[derive(Debug)]
 pub struct AppState {
-    run_state: AppRunState,
+    pub run_state: AppRunState,
 }
 
 #[derive(Debug)]
@@ -53,7 +53,7 @@ pub enum AppRunState {
 
 #[derive(Debug)]
 pub struct AppEvents {
-    pub async_channel: broadcast::Sender<Arc<AppEvent>>,
+    async_channel: broadcast::Sender<Option<Arc<AppEvent>>>,
     pub handlers: RwLock<AppEventHandlers>,
 }
 

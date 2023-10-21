@@ -16,9 +16,11 @@ impl Application {
             .push(handler);
     }
 
-    pub async fn send_sync_event(&self, event: &Arc<AppEvent>) {
-        let mut handler_pool = self.dispatch_sync_events(event).await;
-        self.await_dispatch_results(&mut handler_pool).await;
+    pub async fn send_sync_event(&self, event: &Option<Arc<AppEvent>>) {
+        if let Some(event) = event {
+            let mut handler_pool = self.dispatch_sync_events(event).await;
+            self.await_dispatch_results(&mut handler_pool).await;
+        }
     }
 
     async fn dispatch_sync_events(&self, event: &Arc<AppEvent>) -> JoinSet<()> {

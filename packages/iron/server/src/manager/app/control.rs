@@ -9,7 +9,7 @@ use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tracing::warn;
 
-use crate::manager::app::events::{send_event, AppEventType, LineType};
+use crate::manager::app::events::{close_event_stream, send_event, AppEventType, LineType};
 use crate::manager::app::{AppRunState, Application};
 
 const INPUT_BUFFER_SIZE: usize = 100;
@@ -28,7 +28,6 @@ impl Application {
 
         match state.run_state {
             AppRunState::NotStarted => {
-                self.initialize_app().await?;
                 state.run_state = self.start_new_process(app.clone()).await?;
             }
             AppRunState::Running { .. } => {}
@@ -54,6 +53,8 @@ impl Application {
     }
 
     pub async fn start_new_process(&self, app: Arc<Application>) -> anyhow::Result<AppRunState> {
+        self.initialize_app().await?;
+
         let (sender, receiver) = tokio::sync::mpsc::channel(INPUT_BUFFER_SIZE);
         let app_task = self.spawn_app_tasks(app, receiver).await?;
 
@@ -203,6 +204,8 @@ impl Application {
                     result: execution_result.clone(),
                 }
             ));
+
+            safely!(close_event_stream(&app));
 
             execution_result
         })
