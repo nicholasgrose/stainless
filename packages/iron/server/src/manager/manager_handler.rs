@@ -11,8 +11,8 @@ pub struct ManagerHandler {
 }
 
 impl Debug for ManagerHandler {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(stringify!(ManagerHandler))
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(stringify!(ManagerHandler))
     }
 }
 
