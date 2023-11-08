@@ -59,7 +59,10 @@ impl LogHandlerState {
     }
 
     async fn create_log_file(&self, path: &PathBuf) -> anyhow::Result<File> {
-        tokio::fs::create_dir_all(path).await?;
+        if let Some(directory) = path.parent() {
+            tokio::fs::create_dir_all(directory).await?;
+        }
+
         let log_file = File::create(path).await?;
 
         Ok(log_file)
