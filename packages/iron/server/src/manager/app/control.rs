@@ -150,21 +150,10 @@ impl Application {
             let mut line = String::new();
 
             loop {
-                let bytes_read = output_reader.read_line(&mut line).await;
-
-                match bytes_read {
-                    Ok(bytes_read) => {
-                        if bytes_read == 0 {
-                            return anyhow::Result::<()>::Ok(());
-                        }
-
-                        send_event(
-                            &app_lock,
-                            AppEventType::Print {
-                                line: event_provider(line.clone()),
-                            },
-                        )
-                        .await?;
+                match process_line(&mut line, &app_lock, event_provider, &mut output_reader).await {
+                    Ok(true) => {}
+                    Ok(false) => {
+                        break;
                     }
                     Err(error) => {
                         warn!(?error);
@@ -179,35 +168,66 @@ impl Application {
         app: Arc<Application>,
         mut app_process: Child,
     ) -> JoinHandle<Arc<anyhow::Result<ExitStatus>>> {
-        let _enter = self.config.span.enter();
+        let _entered_trace = self.config.span.enter();
         let app_span = self.config.span.clone();
-
         tokio::spawn(async move {
-            let _enter = app_span.enter();
+            let _entered_span = app_span.enter();
 
             safely!(send_event(&app, AppEventType::Start {}));
 
-            let execution_result = Arc::new(
-                app_process
-                    .wait()
-                    .await
-                    .context("error occurred while running application"),
-            );
+            let execution_result = get_execution_result(&mut app_process).await;
+            app.set_stopped_state(&execution_result).await;
 
-            app.state.write().await.run_state = AppRunState::Stopped {
-                result: execution_result.clone(),
-            };
-
-            safely!(send_event(
-                &app,
-                AppEventType::End {
-                    result: execution_result.clone(),
-                }
-            ));
-
+            safely!(send_event(&app, app_end_event(&execution_result)));
             safely!(close_event_stream(&app));
 
             execution_result
         })
+    }
+
+    async fn set_stopped_state(&self, exec_result: &Arc<anyhow::Result<ExitStatus>>) {
+        self.state.write().await.run_state = AppRunState::Stopped {
+            result: exec_result.clone(),
+        };
+    }
+}
+
+async fn process_line<T>(
+    line: &mut String,
+    app_lock: &Arc<Application>,
+    event_provider: fn(String) -> LineType,
+    output_reader: &mut BufReader<T>,
+) -> anyhow::Result<bool>
+where
+    T: AsyncRead + Unpin + Send + 'static,
+{
+    let bytes_read = output_reader.read_line(line).await?;
+
+    if bytes_read == 0 {
+        return Ok(false);
+    }
+
+    send_event(
+        app_lock,
+        AppEventType::Print {
+            line: event_provider(line.clone()),
+        },
+    )
+    .await
+    .and(Ok(true))
+}
+
+async fn get_execution_result(app_process: &mut Child) -> Arc<anyhow::Result<ExitStatus>> {
+    Arc::new(
+        app_process
+            .wait()
+            .await
+            .context("error occurred while running application"),
+    )
+}
+
+fn app_end_event(exec_result: &Arc<anyhow::Result<ExitStatus>>) -> AppEventType {
+    AppEventType::End {
+        result: exec_result.clone(),
     }
 }
