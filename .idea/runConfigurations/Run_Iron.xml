@@ -15,7 +15,7 @@
       <env name="IRON_IP_ADDRESS" value="127.0.0.1" />
       <env name="IRON_KEY_PATH" value="key.pem" />
       <env name="IRON_PORT" value="8080" />
-      <env name="RUST_LOG" value="DEBUG" />
+      <env name="RUST_LOG" value="INFO" />
     </envs>
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />

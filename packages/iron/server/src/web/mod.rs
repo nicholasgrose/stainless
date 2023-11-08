@@ -84,7 +84,7 @@ where
 impl IronGrpcService {
     #[instrument]
     pub async fn start(&self) -> anyhow::Result<()> {
-        info!("starting iron");
+        info!("starting service");
 
         let mut db_connect_options = ConnectOptions::new(self.database_uri.to_string());
         db_connect_options.sqlx_logging_level(LevelFilter::Debug);
