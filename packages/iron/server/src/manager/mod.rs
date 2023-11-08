@@ -8,12 +8,11 @@ use uuid::Uuid;
 
 use crate::manager::app::create::AppCreationSettings;
 use crate::manager::app::Application;
-use crate::manager::log_handler::LogHandler;
-use crate::manager::manager_handler::ManagerHandler;
+use crate::manager::handlers::log_handler::LogHandler;
+use crate::manager::handlers::manager_handler::ManagerHandler;
 
 pub mod app;
-mod log_handler;
-mod manager_handler;
+pub mod handlers;
 
 #[derive(Debug, Default)]
 pub struct ApplicationManager {

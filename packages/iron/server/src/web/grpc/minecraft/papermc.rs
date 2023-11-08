@@ -10,20 +10,10 @@ use iron_api::minecraft_service::{PaperMcProject, PaperMcServerDefinition};
 
 use crate::database::insert::{Insert, InsertModel};
 use crate::manager::app::create::AppCreationSettings;
-use crate::manager::app::events::{AppEvent, AppEventHandler};
 use crate::manager::app::{AppEventHandlers, AppProperties};
+use crate::manager::handlers::minecraft::papermc::PaperMcHandler;
 use crate::web::grpc::minecraft::aikars_flags::AikarsFlags;
 use crate::web::grpc::AppCreateContext;
-
-#[derive(Default, Debug)]
-pub struct PaperMcHandler;
-
-#[async_trait]
-impl AppEventHandler for PaperMcHandler {
-    async fn handle(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
-        Ok(())
-    }
-}
 
 impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefinition> {
     type Error = anyhow::Error;
