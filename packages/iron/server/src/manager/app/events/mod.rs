@@ -75,7 +75,7 @@ async fn dispatch_task(
 // other than the type becomes unnecessarily bloated and repetitive in resultant traces.
 #[instrument(skip(event), fields(?event.event_type))]
 async fn dispatch(handler: Arc<dyn AppEventHandler>, event: Arc<AppEvent>) {
-    match handler.handle(event.clone()).await {
+    match handler.handle(event).await {
         Ok(_) => {}
         Err(error) => {
             warn!(?error, "event handling failed")
