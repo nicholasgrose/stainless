@@ -71,12 +71,14 @@ async fn dispatch_task(
     dispatch(handler, event).await
 }
 
-#[instrument(skip_all, fields(handler = ?handler, event = ?event.event_type))]
+// This function is only ever called within the event app's span, so including data from the event
+// other than the type becomes unnecessarily bloated and repetitive in resultant traces.
+#[instrument(skip(event), fields(?event.event_type))]
 async fn dispatch(handler: Arc<dyn AppEventHandler>, event: Arc<AppEvent>) {
     match handler.handle(event.clone()).await {
         Ok(_) => {}
         Err(error) => {
-            warn!(warning = "error in event handler", ?error)
+            warn!(?error, "event handling failed")
         }
     }
 }
