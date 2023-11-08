@@ -71,12 +71,12 @@ async fn dispatch_task(
     dispatch(handler, event).await
 }
 
-#[instrument]
+#[instrument(skip_all, fields(handler = ?handler, event = ?event.event_type))]
 async fn dispatch(handler: Arc<dyn AppEventHandler>, event: Arc<AppEvent>) {
     match handler.handle(event.clone()).await {
         Ok(_) => {}
         Err(error) => {
-            warn!(?event, ?error)
+            warn!(warning = "error in event handler", ?error)
         }
     }
 }

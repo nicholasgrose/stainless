@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::process::ExitStatus;
 use std::sync::Arc;
 
 use anyhow::Context;
@@ -74,49 +75,76 @@ impl AppEventHandler for LogHandler {
     async fn handle(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
         match &event.event_type {
             AppEventType::Start { .. } => {
-                self.open_writer().await?;
-                info!("app started")
+                self.handle_start_event().await?;
             }
             AppEventType::End { result } => {
-                match &**result {
-                    Ok(status) => {
-                        info!(?status);
-                    }
-                    Err(error) => {
-                        warn!(?error);
-                    }
-                }
-
-                self.state.write().await.close_writer();
+                self.handle_end_event(result).await?;
             }
             AppEventType::Print { line } => {
-                let text = match line {
-                    LineType::Out(out_line) => {
-                        info!(?line);
-                        out_line
-                    }
-                    LineType::Error(err_line) => {
-                        warn!(?line);
-                        err_line
-                    }
-                };
-
-                let mut state = self.state.write().await;
-
-                match &mut state.file_writer {
-                    None => {
-                        state.open_writer(&self.log_file_path).await?;
-                    }
-                    Some(writer) => {
-                        writer
-                            .write_all(text.as_bytes())
-                            .await
-                            .context("failed to write to log file")?;
-                    }
-                };
+                self.handle_print_event(line).await?;
             }
         }
 
         Ok(())
+    }
+}
+
+impl LogHandler {
+    async fn handle_start_event(&self) -> anyhow::Result<()> {
+        info!("app started");
+        self.open_writer().await?;
+
+        Ok(())
+    }
+
+    async fn handle_end_event(
+        &self,
+        result: &Arc<anyhow::Result<ExitStatus>>,
+    ) -> anyhow::Result<()> {
+        match &**result {
+            Ok(status) => {
+                info!(?status);
+            }
+            Err(error) => {
+                warn!(?error);
+            }
+        }
+
+        self.state.write().await.close_writer();
+
+        Ok(())
+    }
+
+    async fn handle_print_event(&self, line: &LineType) -> anyhow::Result<()> {
+        let text = log_line(line).await;
+        let mut state = self.state.write().await;
+
+        if state.file_writer.is_none() {
+            warn!("file writer was not created prior to event handling");
+            // Do not use self.open_writer(), because that acquires a lock on self.state that would cause a dead lock with above lock.
+            state.open_writer(&self.log_file_path).await?;
+        };
+
+        if let Some(writer) = &mut state.file_writer {
+            writer
+                .write_all(text.as_bytes())
+                .await
+                .context("failed to write to log file")?;
+        }
+
+        Ok(())
+    }
+}
+
+async fn log_line(line: &LineType) -> &str {
+    match line {
+        LineType::Out(out_line) => {
+            info!(?line);
+            out_line
+        }
+        LineType::Error(err_line) => {
+            warn!(?line);
+            err_line
+        }
     }
 }
