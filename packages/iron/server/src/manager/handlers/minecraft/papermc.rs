@@ -1,4 +1,4 @@
-use crate::manager::app::events::{AppEvent, AppEventHandler};
+use crate::manager::app::events::{AppEvent, AsyncAppEventHandler};
 use async_trait::async_trait;
 use std::sync::Arc;
 
@@ -6,8 +6,8 @@ use std::sync::Arc;
 pub struct PaperMcHandler;
 
 #[async_trait]
-impl AppEventHandler for PaperMcHandler {
-    async fn handle(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
+impl AsyncAppEventHandler for PaperMcHandler {
+    async fn handle_async(&self, _event: Arc<AppEvent>) -> anyhow::Result<()> {
         Ok(())
     }
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::manager::app::events::{AppEvent, AppEventHandler, AppEventType};
+use crate::manager::app::events::{AppEvent, AppEventType, AsyncAppEventHandler};
 use crate::manager::ApplicationManager;
 
 pub struct ManagerHandler {
@@ -17,8 +17,8 @@ impl Debug for ManagerHandler {
 }
 
 #[async_trait]
-impl AppEventHandler for ManagerHandler {
-    async fn handle(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
+impl AsyncAppEventHandler for ManagerHandler {
+    async fn handle_async(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
         match &event.event_type {
             AppEventType::Start { .. } => {}
             AppEventType::End { .. } => {

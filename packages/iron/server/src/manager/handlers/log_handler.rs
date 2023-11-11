@@ -9,7 +9,7 @@ use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::sync::RwLock;
 use tracing::{info, warn};
 
-use crate::manager::app::events::{AppEvent, AppEventHandler, AppEventType, LineType};
+use crate::manager::app::events::{AppEvent, AppEventType, AsyncAppEventHandler, LineType};
 use crate::manager::app::Application;
 
 #[derive(Debug)]
@@ -74,8 +74,8 @@ impl LogHandlerState {
 }
 
 #[async_trait]
-impl AppEventHandler for LogHandler {
-    async fn handle(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
+impl AsyncAppEventHandler for LogHandler {
+    async fn handle_async(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
         match &event.event_type {
             AppEventType::Start { .. } => {
                 self.handle_start_event().await?;

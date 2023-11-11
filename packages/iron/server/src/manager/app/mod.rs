@@ -7,7 +7,7 @@ use tokio::sync::{broadcast, RwLock};
 use tokio::task::JoinHandle;
 use uuid::Uuid;
 
-use crate::manager::app::events::{AppEvent, AppEventHandler};
+use crate::manager::app::events::{AppEvent, AsyncAppEventHandler, SyncAppEventHandler};
 
 pub mod control;
 pub mod create;
@@ -59,6 +59,6 @@ pub struct AppEvents {
 
 #[derive(Debug)]
 pub struct AppEventHandlers {
-    pub async_handlers: Vec<Arc<dyn AppEventHandler>>,
-    pub sync_handlers: Vec<Arc<dyn AppEventHandler>>,
+    pub async_handlers: Vec<Arc<dyn AsyncAppEventHandler>>,
+    pub sync_handlers: Vec<Arc<dyn SyncAppEventHandler>>,
 }

@@ -4,8 +4,8 @@ use anyhow::Context;
 use tokio::task::JoinHandle;
 use tracing::instrument;
 
-use crate::manager::app::events::AppEventHandler;
 use crate::manager::app::events::{dispatch_task, AppEvent};
+use crate::manager::app::events::{AppEventHandler, AsyncAppEventHandler};
 use crate::manager::app::{AppRunState, Application};
 
 impl Application {
@@ -19,7 +19,7 @@ impl Application {
         Ok(())
     }
 
-    pub async fn subscribe_async_handler(&self, handler: Arc<dyn AppEventHandler>) {
+    pub async fn subscribe_async_handler(&self, handler: Arc<dyn AsyncAppEventHandler>) {
         self.events
             .handlers
             .write()
@@ -40,7 +40,7 @@ impl Application {
 
     pub fn spawn_event_listener(
         &self,
-        handler: Arc<dyn AppEventHandler>,
+        handler: Arc<dyn AsyncAppEventHandler>,
     ) -> JoinHandle<anyhow::Result<()>> {
         let mut receiver = self.events.async_channel.subscribe();
 
@@ -59,7 +59,7 @@ impl Application {
                     }
                     Some(event) => {
                         tokio::spawn(dispatch_task(
-                            handler.clone(),
+                            AppEventHandler::Asynchronous(handler.clone()),
                             event.clone(),
                             app_span.clone(),
                         ));

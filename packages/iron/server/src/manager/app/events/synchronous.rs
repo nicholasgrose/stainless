@@ -2,12 +2,12 @@ use std::sync::Arc;
 
 use tokio::task::JoinSet;
 
-use crate::manager::app::events::dispatch_task;
-use crate::manager::app::events::{AppEvent, AppEventHandler};
+use crate::manager::app::events::AppEvent;
+use crate::manager::app::events::{dispatch_task, AppEventHandler, SyncAppEventHandler};
 use crate::manager::app::Application;
 
 impl Application {
-    pub async fn _subscribe_sync_handler(&self, handler: Arc<dyn AppEventHandler>) {
+    pub async fn _subscribe_sync_handler(&self, handler: Arc<dyn SyncAppEventHandler>) {
         self.events
             .handlers
             .write()
@@ -32,7 +32,11 @@ impl Application {
             let dispatch_handler = handler.clone();
             let dispatch_event = event.clone();
 
-            handler_pool.spawn(dispatch_task(dispatch_handler, dispatch_event, app_span));
+            handler_pool.spawn(dispatch_task(
+                AppEventHandler::Synchronous(dispatch_handler),
+                dispatch_event,
+                app_span,
+            ));
         }
 
         handler_pool

@@ -33,9 +33,20 @@ pub enum LineType {
     Error(String),
 }
 
+#[derive(Debug)]
+pub enum AppEventHandler {
+    Synchronous(Arc<dyn SyncAppEventHandler>),
+    Asynchronous(Arc<dyn AsyncAppEventHandler>),
+}
+
 #[async_trait]
-pub trait AppEventHandler: Send + Sync + Debug {
-    async fn handle(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
+pub trait AsyncAppEventHandler: Send + Sync + Debug {
+    async fn handle_async(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
+}
+
+#[async_trait]
+pub trait SyncAppEventHandler: Send + Sync + Debug {
+    async fn handle_sync(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
 }
 
 pub async fn send_event(app: &Arc<Application>, event: AppEventType) -> anyhow::Result<()> {
@@ -62,7 +73,7 @@ async fn send_to_handlers(
 }
 
 async fn dispatch_task(
-    handler: Arc<dyn AppEventHandler>,
+    handler: AppEventHandler,
     event: Arc<AppEvent>,
     app_span: Arc<tracing::Span>,
 ) {
@@ -74,8 +85,19 @@ async fn dispatch_task(
 // This function is only ever called within the event app's span, so including data from the event
 // other than the type becomes unnecessarily bloated and repetitive in resultant traces.
 #[instrument(skip(event), fields(?event.event_type))]
-async fn dispatch(handler: Arc<dyn AppEventHandler>, event: Arc<AppEvent>) {
-    match handler.handle(event).await {
+async fn dispatch(handler: AppEventHandler, event: Arc<AppEvent>) {
+    match handler {
+        AppEventHandler::Synchronous(handler) => {
+            process_handler_result(handler.handle_sync(event).await)
+        }
+        AppEventHandler::Asynchronous(handler) => {
+            process_handler_result(handler.handle_async(event).await)
+        }
+    }
+}
+
+fn process_handler_result(result: anyhow::Result<()>) {
+    match result {
         Ok(_) => {}
         Err(error) => {
             warn!(?error, "event handling failed")
