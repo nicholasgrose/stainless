@@ -11,12 +11,13 @@ pub trait Insert: Debug + Send + Sync {
     async fn insert(&self, connection: &impl ConnectionTrait) -> anyhow::Result<()>;
 }
 
+#[async_trait]
 pub trait InsertModel<T, C>
 where
     T: ActiveModelTrait,
     C: Debug,
 {
-    fn build_model(&self, context: &C) -> anyhow::Result<T>;
+    async fn build_model(&self, context: &C) -> anyhow::Result<T>;
 }
 
 impl IronDatabase {

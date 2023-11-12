@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use async_trait::async_trait;
 
 use sea_orm::Set;
 use tonic::{Request, Response};
@@ -44,11 +45,12 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
     }
 }
 
+#[async_trait]
 impl<M> InsertModel<MinecraftServerModel, AppCreateContext<M>> for MinecraftServerDefinition
 where
     M: prost::Message,
 {
-    fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<MinecraftServerModel> {
+    async fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<MinecraftServerModel> {
         Ok(MinecraftServerModel {
             id: Set(context.application.properties.id.to_string()),
             game_version: Set(self.game_version.clone()),

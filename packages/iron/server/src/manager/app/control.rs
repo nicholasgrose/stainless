@@ -4,7 +4,7 @@ use std::sync::Arc;
 use anyhow::Context;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::io::{AsyncRead, BufWriter};
-use tokio::process::{Child, ChildStdin, Command};
+use tokio::process::{Child, ChildStdin};
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tracing::warn;
@@ -76,10 +76,9 @@ impl Application {
     }
 
     async fn execute(&self) -> anyhow::Result<Child> {
-        let command_args: Vec<&str> = self.config.properties.command.split(' ').collect();
+        let mut command = self.config.properties.command.executable();
 
-        Ok(Command::new(command_args[0])
-            .args(&command_args[1..])
+        Ok(command
             .current_dir(&self.config.directory)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

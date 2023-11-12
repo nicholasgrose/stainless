@@ -28,7 +28,7 @@ impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefiniti
                 properties: AppProperties {
                     id: Uuid::new_v4(),
                     name: server_definition.name.clone(),
-                    command: AikarsFlags::try_from(minecraft_server_definition)?.to_string(),
+                    command: AikarsFlags::try_from(minecraft_server_definition)?.into(),
                 },
                 handlers: AppEventHandlers {
                     async_handlers: vec![Arc::<PaperMcHandler>::default()],
@@ -47,26 +47,36 @@ impl Insert for AppCreateContext<PaperMcServerDefinition> {
         let server_definition = required_def!(minecraft_server_definition.server_definition)?;
 
         server_definition
-            .build_model(self)?
+            .build_model(self)
+            .await?
             .insert(connection)
             .await?;
 
         minecraft_server_definition
-            .build_model(self)?
+            .build_model(self)
+            .await?
             .insert(connection)
             .await?;
 
-        self.message.build_model(self)?.insert(connection).await?;
+        self.message
+            .build_model(self)
+            .await?
+            .insert(connection)
+            .await?;
 
         Ok(())
     }
 }
 
+#[async_trait]
 impl<M> InsertModel<PaperMcServerModel, AppCreateContext<M>> for PaperMcServerDefinition
 where
     M: prost::Message,
 {
-    fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<PaperMcServerModel> {
+    async fn build_model(
+        &self,
+        context: &AppCreateContext<M>,
+    ) -> anyhow::Result<PaperMcServerModel> {
         let paper_mc_project =
             PaperMcProject::try_from(self.project).context("invalid paper mc project provided")?;
 

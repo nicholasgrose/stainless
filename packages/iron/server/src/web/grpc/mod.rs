@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use async_trait::async_trait;
 
 use prost::Message;
 use sea_orm::Set;
@@ -24,15 +25,16 @@ fn to_tonic_status(err: anyhow::Error) -> tonic::Status {
     tonic::Status::from_error(err.into())
 }
 
+#[async_trait]
 impl<M> InsertModel<ApplicationModel, AppCreateContext<M>> for ServerDefinition
 where
     M: prost::Message,
 {
-    fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<ApplicationModel> {
+    async fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<ApplicationModel> {
         Ok(ApplicationModel {
             id: Set(context.application.properties.id.to_string()),
             name: Set(self.name.clone()),
-            command: Set(context.application.properties.command.clone()),
+            command: Set(context.application.properties.command.to_string()),
             active: Set(self.active),
         })
     }
