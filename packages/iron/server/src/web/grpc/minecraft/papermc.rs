@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::Context;
@@ -41,16 +42,15 @@ impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefiniti
 }
 
 #[async_trait]
-impl Insert for AppCreateContext<PaperMcServerDefinition> {
-    async fn insert(&self, connection: &impl ConnectionTrait) -> anyhow::Result<()> {
+impl<C> Insert<C> for AppCreateContext<PaperMcServerDefinition>
+where
+    C: Debug,
+{
+    async fn insert(&self, connection: &impl ConnectionTrait, _context: &C) -> anyhow::Result<()> {
         let minecraft_server_definition = required_def!(self.message.minecraft_server_definition)?;
         let server_definition = required_def!(minecraft_server_definition.server_definition)?;
 
-        server_definition
-            .build_model(self)
-            .await?
-            .insert(connection)
-            .await?;
+        server_definition.insert(connection, self).await?;
 
         minecraft_server_definition
             .build_model(self)

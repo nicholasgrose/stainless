@@ -7,8 +7,11 @@ use tracing::{debug, instrument};
 use crate::database::IronDatabase;
 
 #[async_trait]
-pub trait Insert: Debug + Send + Sync {
-    async fn insert(&self, connection: &impl ConnectionTrait) -> anyhow::Result<()>;
+pub trait Insert<C>: Debug + Send + Sync
+where
+    C: Debug,
+{
+    async fn insert(&self, connection: &impl ConnectionTrait, context: &C) -> anyhow::Result<()>;
 }
 
 #[async_trait]
@@ -22,12 +25,12 @@ where
 
 impl IronDatabase {
     #[instrument(skip(self))]
-    pub async fn insert(&self, value: &impl Insert) -> anyhow::Result<()> {
+    pub async fn insert(&self, value: &impl Insert<()>) -> anyhow::Result<()> {
         debug!("inserting new value");
 
         let transaction = self.connection.begin().await?;
 
-        value.insert(&transaction).await?;
+        value.insert(&transaction, &()).await?;
 
         transaction.commit().await?;
 

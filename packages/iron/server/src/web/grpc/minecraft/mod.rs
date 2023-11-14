@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use async_trait::async_trait;
+use std::sync::Arc;
 
 use sea_orm::Set;
 use tonic::{Request, Response};
@@ -50,7 +50,10 @@ impl<M> InsertModel<MinecraftServerModel, AppCreateContext<M>> for MinecraftServ
 where
     M: prost::Message,
 {
-    async fn build_model(&self, context: &AppCreateContext<M>) -> anyhow::Result<MinecraftServerModel> {
+    async fn build_model(
+        &self,
+        context: &AppCreateContext<M>,
+    ) -> anyhow::Result<MinecraftServerModel> {
         Ok(MinecraftServerModel {
             id: Set(context.application.properties.id.to_string()),
             game_version: Set(self.game_version.clone()),
