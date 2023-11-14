@@ -83,12 +83,7 @@ impl AppCommand {
     fn executable(&self) -> Command {
         let mut command = Command::new(&self.program.argument);
 
-        let args = self
-            .args
-            .iter()
-            .map(|a| a.argument.as_str())
-            .collect::<Vec<&str>>();
-        command.args(args);
+        command.args(self.args.iter().map(|a| a.argument.as_str()));
 
         command
     }
