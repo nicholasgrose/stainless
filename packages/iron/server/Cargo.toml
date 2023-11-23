@@ -10,7 +10,7 @@ anyhow = "1.0"
 async-trait = "0.1"
 console-subscriber = "0.2"
 entity = { path = "../../database/entity" }
-http = "0.2"
+http = "1.0"
 iron_api = { path = "../api" }
 prost = "0.12"
 sea-orm = { version = "0.12", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print", "with-uuid", "with-chrono"] }
@@ -19,5 +19,5 @@ tonic = { version = "0.10", features = ["tls"] }
 tower = { version = "0.4", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-uuid = { version = "1.5", features = ["v4"] }
+uuid = { version = "1.6", features = ["v4"] }
 velcro = "0.5"
