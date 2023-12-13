@@ -1,17 +1,18 @@
-use async_trait::async_trait;
-use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
 use std::path::PathBuf;
 use std::process::ExitStatus;
 use std::sync::Arc;
 
-use crate::database::insert::{Insert, InsertModel};
-use entity::app_args::ActiveModel as AppArgModel;
+use async_trait::async_trait;
+use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
 use tokio::process::Command;
 use tokio::sync::mpsc;
 use tokio::sync::{broadcast, RwLock};
 use tokio::task::JoinHandle;
 use uuid::Uuid;
 
+use entity::app_args::ActiveModel as AppArgModel;
+
+use crate::database::insert::{Insert, InsertModel};
 use crate::manager::app::events::{AppEvent, AsyncAppEventHandler, SyncAppEventHandler};
 
 pub mod control;
@@ -58,21 +59,20 @@ impl Insert<AppProperties> for AppCommand {
         connection: &impl ConnectionTrait,
         context: &AppProperties,
     ) -> anyhow::Result<()> {
-        let all_args = std::iter::once(&self.program)
-            .chain(&self.args)
-            .collect::<Vec<_>>();
+        let mut last_processed = None;
+        let all_args = std::iter::once(&self.program).chain(&self.args).rev();
 
         // We should iterate in reverse so that DB constraints don't hate us
-        for arg_index in (0..all_args.len()).rev() {
-            let arg = all_args[arg_index];
-
+        for arg in all_args {
             arg.build_model(&AppArgModelContext {
                 app_properties: context,
-                next_arg: all_args.get(arg_index + 1).copied(),
+                next_arg: last_processed,
             })
             .await?
             .insert(connection)
             .await?;
+
+            last_processed = Some(arg);
         }
 
         Ok(())

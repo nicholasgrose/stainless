@@ -45,23 +45,23 @@ pub struct IronTlsConfig {
 }
 
 impl IronGrpcService {
-    pub fn new() -> Self {
-        IronGrpcService {
-            database_uri: env_var("IRON_DATABASE_URI", "sqlite://iron_db.sqlite3"),
+    pub fn new() -> anyhow::Result<Self> {
+        Ok(IronGrpcService {
+            database_uri: env_var("IRON_DATABASE_URI", "sqlite://iron_db.sqlite3")?,
             tls: IronTlsConfig {
-                certificate_file_path: env_var("IRON_CERTIFICATE_PATH", "cert.pem"),
-                key_file_path: env_var("IRON_KEY_PATH", "key.pem"),
+                certificate_file_path: env_var("IRON_CERTIFICATE_PATH", "cert.pem")?,
+                key_file_path: env_var("IRON_KEY_PATH", "key.pem")?,
             },
             address: SocketAddr::new(
-                env_var("IRON_IP_ADDRESS", "127.0.0.1"),
-                env_var("IRON_PORT", "8080"),
+                env_var("IRON_IP_ADDRESS", "127.0.0.1")?,
+                env_var("IRON_PORT", "8080")?,
             ),
-        }
+        })
     }
 }
 
 #[instrument]
-fn env_var<U, T>(name: &str, default: U) -> T
+fn env_var<U, T>(name: &str, default: U) -> anyhow::Result<T>
 where
     U: Into<String> + Display + Debug,
     T: FromStr,
@@ -78,7 +78,6 @@ where
                 name
             ))
         })
-        .unwrap()
 }
 
 impl IronGrpcService {

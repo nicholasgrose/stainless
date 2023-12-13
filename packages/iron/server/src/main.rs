@@ -13,7 +13,7 @@ mod web;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     start_logging();
-    IronGrpcService::new().start().await
+    IronGrpcService::new()?.start().await
 }
 
 fn start_logging() {
