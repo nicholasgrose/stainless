@@ -1,12 +1,10 @@
 use std::fmt::Debug;
 
-use async_trait::async_trait;
 use sea_orm::{ActiveModelTrait, ConnectionTrait, TransactionTrait};
 use tracing::{debug, instrument};
 
 use crate::database::IronDatabase;
 
-#[async_trait]
 pub trait Insert<C>: Debug + Send + Sync
 where
     C: Debug,
@@ -14,7 +12,6 @@ where
     async fn insert(&self, connection: &impl ConnectionTrait, context: &C) -> anyhow::Result<()>;
 }
 
-#[async_trait]
 pub trait InsertModel<T, C>
 where
     T: ActiveModelTrait,

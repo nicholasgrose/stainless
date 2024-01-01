@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use std::fmt::Debug;
 
 use prost::Message;
@@ -25,7 +24,6 @@ fn to_tonic_status(err: anyhow::Error) -> tonic::Status {
     tonic::Status::from_error(err.into())
 }
 
-#[async_trait]
 impl<M> Insert<AppCreateContext<M>> for ServerDefinition
 where
     M: prost::Message,
@@ -48,7 +46,6 @@ where
     }
 }
 
-#[async_trait]
 impl<M> InsertModel<ApplicationModel, AppCreateContext<M>> for ServerDefinition
 where
     M: prost::Message,

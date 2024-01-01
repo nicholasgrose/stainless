@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use std::sync::Arc;
 
 use sea_orm::Set;
@@ -45,7 +44,6 @@ impl MinecraftServerCreator for IronMinecraftServerCreator {
     }
 }
 
-#[async_trait]
 impl<M> InsertModel<MinecraftServerModel, AppCreateContext<M>> for MinecraftServerDefinition
 where
     M: prost::Message,

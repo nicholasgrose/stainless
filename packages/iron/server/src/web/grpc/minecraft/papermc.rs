@@ -2,7 +2,6 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use anyhow::Context;
-use async_trait::async_trait;
 use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
 use uuid::Uuid;
 
@@ -41,7 +40,6 @@ impl TryFrom<PaperMcServerDefinition> for AppCreateContext<PaperMcServerDefiniti
     }
 }
 
-#[async_trait]
 impl<C> Insert<C> for AppCreateContext<PaperMcServerDefinition>
 where
     C: Debug,
@@ -68,7 +66,6 @@ where
     }
 }
 
-#[async_trait]
 impl<M> InsertModel<PaperMcServerModel, AppCreateContext<M>> for PaperMcServerDefinition
 where
     M: prost::Message,

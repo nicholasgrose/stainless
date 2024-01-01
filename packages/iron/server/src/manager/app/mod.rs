@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use std::process::ExitStatus;
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use sea_orm::{ActiveModelTrait, ConnectionTrait, Set};
 use tokio::process::Command;
 use tokio::sync::mpsc;
@@ -52,7 +51,6 @@ pub struct AppArg {
     pub argument: String,
 }
 
-#[async_trait]
 impl Insert<AppProperties> for AppCommand {
     async fn insert(
         &self,
@@ -107,7 +105,6 @@ struct AppArgModelContext<'a> {
     next_arg: Option<&'a AppArg>,
 }
 
-#[async_trait]
 impl<'a> InsertModel<AppArgModel, AppArgModelContext<'a>> for AppArg {
     async fn build_model(&self, context: &AppArgModelContext<'a>) -> anyhow::Result<AppArgModel> {
         Ok(AppArgModel {
