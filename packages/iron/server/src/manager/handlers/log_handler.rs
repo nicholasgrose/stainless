@@ -3,6 +3,7 @@ use std::process::ExitStatus;
 use std::sync::Arc;
 
 use anyhow::Context;
+use async_trait::async_trait;
 use tokio::fs::File;
 use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::sync::RwLock;
@@ -72,6 +73,7 @@ impl LogHandlerState {
     }
 }
 
+#[async_trait]
 impl AsyncAppEventHandler for LogHandler {
     async fn handle_async(&self, event: Arc<AppEvent>) -> anyhow::Result<()> {
         match &event.event_type {

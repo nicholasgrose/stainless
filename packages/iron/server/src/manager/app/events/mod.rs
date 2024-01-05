@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::process::ExitStatus;
 use std::sync::Arc;
+use tonic::async_trait;
 
 use tracing::{instrument, warn};
 
@@ -38,10 +39,12 @@ pub enum AppEventHandler {
     Asynchronous(Arc<dyn AsyncAppEventHandler>),
 }
 
+#[async_trait]
 pub trait AsyncAppEventHandler: Send + Sync + Debug {
     async fn handle_async(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
 }
 
+#[async_trait]
 pub trait SyncAppEventHandler: Send + Sync + Debug {
     async fn handle_sync(&self, event: Arc<AppEvent>) -> anyhow::Result<()>;
 }
