@@ -14,10 +14,10 @@ http = "1.0"
 iron_api = { path = "../api" }
 prost = "0.12"
 sea-orm = { version = "0.12", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros", "debug-print", "with-uuid", "with-chrono"] }
-tokio = { version = "1.35", features = ["full", "tracing"] }
-tonic = { version = "0.10", features = ["tls"] }
+tokio = { version = "1.36", features = ["full", "tracing"] }
+tonic = { version = "0.11", features = ["tls"] }
 tower = { version = "0.4", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-uuid = { version = "1.6", features = ["v4"] }
+uuid = { version = "1.7", features = ["v4"] }
 velcro = "0.5"
